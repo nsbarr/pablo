@@ -1,0 +1,6 @@
+framework module Pods_ifeellikepablo {
+  umbrella header "Pods-ifeellikepablo-umbrella.h"
+
+  export *
+  module * { export * }
+}

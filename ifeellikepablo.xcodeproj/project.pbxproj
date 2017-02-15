@@ -7,14 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01B87A471E467339003CCCF8 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 01B87A461E467339003CCCF8 /* GoogleService-Info.plist */; };
 		01CD0CBD1E466E3300277364 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01CD0CBC1E466E3300277364 /* AppDelegate.swift */; };
 		01CD0CBF1E466E3300277364 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01CD0CBE1E466E3300277364 /* ViewController.swift */; };
 		01CD0CC21E466E3300277364 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 01CD0CC01E466E3300277364 /* Main.storyboard */; };
 		01CD0CC41E466E3300277364 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 01CD0CC31E466E3300277364 /* Assets.xcassets */; };
 		01CD0CC71E466E3300277364 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 01CD0CC51E466E3300277364 /* LaunchScreen.storyboard */; };
+		C39D26F247BDA6B979EF68CD /* Pods_ifeellikepablo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F5F8018157B0F80F7B3D882 /* Pods_ifeellikepablo.framework */; };
+		DD41064D1E537D1C00FF9862 /* Pablo.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD41064C1E537D1C00FF9862 /* Pablo.swift */; };
+		DD41064F1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD41064E1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift */; };
+		DD46F6221E48D64300B5E46B /* image.png in Resources */ = {isa = PBXBuildFile; fileRef = DD46F6211E48D64300B5E46B /* image.png */; };
+		DD46F6241E48D84600B5E46B /* face.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DD46F6231E48D84600B5E46B /* face.jpg */; };
+		DDDEFED81E467CEB001AC4F4 /* SwiftyDraw.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDDEFED71E467CEB001AC4F4 /* SwiftyDraw.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		01B87A461E467339003CCCF8 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../GoogleService-Info.plist"; sourceTree = "<group>"; };
 		01CD0CB91E466E3300277364 /* ifeellikepablo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ifeellikepablo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		01CD0CBC1E466E3300277364 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		01CD0CBE1E466E3300277364 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -22,6 +30,14 @@
 		01CD0CC31E466E3300277364 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		01CD0CC61E466E3300277364 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		01CD0CC81E466E3300277364 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1A9A64C0FA9509913BD20C15 /* Pods-ifeellikepablo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ifeellikepablo.release.xcconfig"; path = "Pods/Target Support Files/Pods-ifeellikepablo/Pods-ifeellikepablo.release.xcconfig"; sourceTree = "<group>"; };
+		3F5F8018157B0F80F7B3D882 /* Pods_ifeellikepablo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ifeellikepablo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD41064C1E537D1C00FF9862 /* Pablo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Pablo.swift; sourceTree = "<group>"; };
+		DD41064E1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PabloFeedCollectionViewCell.swift; sourceTree = "<group>"; };
+		DD46F6211E48D64300B5E46B /* image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = image.png; sourceTree = "<group>"; };
+		DD46F6231E48D84600B5E46B /* face.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = face.jpg; sourceTree = "<group>"; };
+		DDDEFED71E467CEB001AC4F4 /* SwiftyDraw.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyDraw.swift; sourceTree = "<group>"; };
+		F7B40717BE029A9287D4D092 /* Pods-ifeellikepablo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ifeellikepablo.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ifeellikepablo/Pods-ifeellikepablo.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,6 +45,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C39D26F247BDA6B979EF68CD /* Pods_ifeellikepablo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -38,8 +55,13 @@
 		01CD0CB01E466E3300277364 = {
 			isa = PBXGroup;
 			children = (
+				DD46F6211E48D64300B5E46B /* image.png */,
+				DD46F6231E48D84600B5E46B /* face.jpg */,
+				DDDEFED71E467CEB001AC4F4 /* SwiftyDraw.swift */,
 				01CD0CBB1E466E3300277364 /* ifeellikepablo */,
 				01CD0CBA1E466E3300277364 /* Products */,
+				FEB6EEC9BB74A46EE13C4676 /* Pods */,
+				95E5610176FD264A41CA64FB /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -56,12 +78,32 @@
 			children = (
 				01CD0CBC1E466E3300277364 /* AppDelegate.swift */,
 				01CD0CBE1E466E3300277364 /* ViewController.swift */,
+				DD41064E1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift */,
+				DD41064C1E537D1C00FF9862 /* Pablo.swift */,
 				01CD0CC01E466E3300277364 /* Main.storyboard */,
 				01CD0CC31E466E3300277364 /* Assets.xcassets */,
 				01CD0CC51E466E3300277364 /* LaunchScreen.storyboard */,
 				01CD0CC81E466E3300277364 /* Info.plist */,
+				01B87A461E467339003CCCF8 /* GoogleService-Info.plist */,
 			);
 			path = ifeellikepablo;
+			sourceTree = "<group>";
+		};
+		95E5610176FD264A41CA64FB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3F5F8018157B0F80F7B3D882 /* Pods_ifeellikepablo.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		FEB6EEC9BB74A46EE13C4676 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				F7B40717BE029A9287D4D092 /* Pods-ifeellikepablo.debug.xcconfig */,
+				1A9A64C0FA9509913BD20C15 /* Pods-ifeellikepablo.release.xcconfig */,
+			);
+			name = Pods;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -71,9 +113,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 01CD0CCB1E466E3300277364 /* Build configuration list for PBXNativeTarget "ifeellikepablo" */;
 			buildPhases = (
+				7D01588046D11CB67214AA38 /* [CP] Check Pods Manifest.lock */,
 				01CD0CB51E466E3300277364 /* Sources */,
 				01CD0CB61E466E3300277364 /* Frameworks */,
 				01CD0CB71E466E3300277364 /* Resources */,
+				1341B8C975222CE7E69609EC /* [CP] Embed Pods Frameworks */,
+				C8C0971DB94D1A2455EDEFD6 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -125,18 +170,72 @@
 			buildActionMask = 2147483647;
 			files = (
 				01CD0CC71E466E3300277364 /* LaunchScreen.storyboard in Resources */,
+				01B87A471E467339003CCCF8 /* GoogleService-Info.plist in Resources */,
 				01CD0CC41E466E3300277364 /* Assets.xcassets in Resources */,
 				01CD0CC21E466E3300277364 /* Main.storyboard in Resources */,
+				DD46F6241E48D84600B5E46B /* face.jpg in Resources */,
+				DD46F6221E48D64300B5E46B /* image.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1341B8C975222CE7E69609EC /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ifeellikepablo/Pods-ifeellikepablo-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		7D01588046D11CB67214AA38 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		C8C0971DB94D1A2455EDEFD6 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ifeellikepablo/Pods-ifeellikepablo-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		01CD0CB51E466E3300277364 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD41064D1E537D1C00FF9862 /* Pablo.swift in Sources */,
+				DD41064F1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift in Sources */,
+				DDDEFED81E467CEB001AC4F4 /* SwiftyDraw.swift in Sources */,
 				01CD0CBF1E466E3300277364 /* ViewController.swift in Sources */,
 				01CD0CBD1E466E3300277364 /* AppDelegate.swift in Sources */,
 			);
@@ -257,26 +356,36 @@
 		};
 		01CD0CCC1E466E3300277364 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F7B40717BE029A9287D4D092 /* Pods-ifeellikepablo.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = 3RA98GNA2A;
 				INFOPLIST_FILE = ifeellikepablo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = poemsio.ifeellikepablo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
 		01CD0CCD1E466E3300277364 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1A9A64C0FA9509913BD20C15 /* Pods-ifeellikepablo.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = 3RA98GNA2A;
 				INFOPLIST_FILE = ifeellikepablo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = poemsio.ifeellikepablo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
@@ -300,6 +409,7 @@
 				01CD0CCD1E466E3300277364 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
