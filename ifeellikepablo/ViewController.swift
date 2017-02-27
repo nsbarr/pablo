@@ -4,6 +4,11 @@
 //  Created by nick barr on 2/4/17.
 //  Copyright © 2017 poemsio. All rights reserved.
 
+// THREE BIG TODOS
+// TODO: Figure out a better way to load in pablos
+// TODO: Properly handle pablo paths of different sizes (eg., 5 loading on 7; 7 loading on 5
+// TODO: Come up with the magic animation thing
+
 
 import UIKit
 import Firebase
@@ -39,6 +44,10 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     var modalView: UIView!
     var modalVC: UIViewController!
     var dismissButton: UIButton!
+    
+    //bullshit
+    var pabloImageWidth: CGFloat!
+    var appendedPath = UIBezierPath()
 
     
     //# MARK: - View Setup
@@ -46,7 +55,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        let drawFrame = CGRect(x: 0, y: 0, width: 300, height: 300)
+        let drawFrame = CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.width)
         drawView = SwiftyDrawView(frame: drawFrame)
         self.view.addSubview(drawView)
         drawView.center = view.center
@@ -136,7 +145,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         //let image = searches[indexPath.row]
         let cellImage = pablos[indexPath.row].image
         let imagePath = pablos[indexPath.row].path
-        
+        appendedPath.append(UIBezierPath(cgPath: imagePath))
         self.presentModalWithImageAndPath(image: cellImage, imagePath: imagePath)
         
         print("You selected cell #\(indexPath.item)!")
@@ -243,13 +252,14 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
        
         modalView = UIView(frame: self.view.frame)
         modalView.backgroundColor = UIColor.black
-        expandedImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+        expandedImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.width))
         expandedImageView.center = self.view.center
         expandedImageView.image = image
         modalView.addSubview(expandedImageView)
         modalVC = UIViewController()
         modalVC.view = modalView
         tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.tapDetectedSoAnimatePath))
+        pabloImageWidth = image.size.width
         pathToAnimate = imagePath
         modalView.addGestureRecognizer(tapRecognizer)
         self.present(modalVC, animated: false) {
@@ -285,9 +295,72 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         shapeLayer.lineWidth = 2.0
         shapeLayer.lineCap = kCALineCapRound
         
+        // trying to scale animations
+        // shapeLayer.bounds = animateView.bounds
+        // shapeLayer.position = CGPoint(x: animateView.bounds.midX, y: animateView.bounds.midY)
+        // shapeLayer.fillColor = UIColor.blue.cgColor
+        
+        
         animateView.layer.addSublayer(shapeLayer)
         
-        shapeLayer.path = pathToAnimate//drawView.path
+        
+        var pathToAnimateScaled = pathToAnimate!
+        var scaleRatio:CGFloat = 1.0
+        
+        //TODO: this isn't working because it's only looking at the little rectangle that bounds the path.
+        //When that rectangle is very small (because the drawing is very small), it will blow up the drawing.
+        // Does CGPath have a position or something that we could use? How can we scale it according to its parent view, 
+        // while keeping its relationship with the parent view intact?
+        // eg., could we take the start point coordinate? is it true that as long as that coordinate is correct the drawing
+        // will have the right scale? (no)
+        
+        //hey, try using image size
+        
+        //What we want is to scale the cgpath according to the box it was originally drawn in
+        //path bigger: path = 15, box = 10. set path to 10. 10/15 * 15 = 10
+        // box is bigger : path = 10, box = 15. set path to 15. 10 * 15/10 = 15
+        
+        print(pabloImageWidth)
+        //640 on 5 (2x width)
+        //1242 on 7 (3x width)
+        print(animateView.frame.width)
+        // 414 on 7
+        // 320 on 5
+        
+        //TODO: there must be a chiller way to infer scale from width of image
+        
+        if pabloImageWidth == 640{ //made on iPhone 5
+            if animateView.frame.width == 414{ // displaying on iPhone 7+
+                scaleRatio = animateView.frame.width / pabloImageWidth * 2
+            
+            }
+        }
+        
+        if pabloImageWidth == 1242{
+            if animateView.frame.width == 320{
+                scaleRatio = animateView.frame.width / pabloImageWidth * 3 //compare pixels vs whatever
+
+            }
+        }
+        
+        
+        
+//        if pabloImageWidth > animateView.frame.width{
+//            scaleRatio = animateView.frame.width / pabloImageWidth
+//
+//        }
+//        else {
+//            scaleRatio = pabloImageWidth / animateView.frame.width
+//
+//        }
+        print(scaleRatio)
+        let bez = UIBezierPath(cgPath: pathToAnimateScaled)
+        bez.apply(CGAffineTransform(scaleX: scaleRatio, y: scaleRatio))
+        pathToAnimateScaled = bez.cgPath
+        
+        shapeLayer.path = pathToAnimateScaled //pathToAnimate//drawView.path
+
+        
         
         let animation = CABasicAnimation(keyPath: "strokeEnd")
         animation.delegate = self
@@ -350,18 +423,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     func pressed(sender: UIButton!){
         print("pressed")
         
-        //TODO: ASK BRYAN
-        
-        //GOAL: ALWAYS PUT THE ONE YOU JUST CREATED AT TOP. THE REST REVERSE CHRON SORT. NEVER DUPE.
-//        searches.append(viewImage)
-//
-//        let indexPath = IndexPath(item: 1, section: 1)
-//        self.collectionView.insertItems(at: [indexPath])
-        
-        //self.ohStopIt()
 
-
-        
         self.collectionView.reloadData()
         self.collectionView.isHidden = !self.collectionView.isHidden
         
@@ -370,8 +432,23 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
             drawView.drawingEnabled = true
 
         }
+        
+        else {
+           // self.doInfinityAnimation()
+        }
 
         
+    }
+    
+    func doInfinityAnimation(){
+        //present a new full screen view
+        //concat some paths
+        // animate the path
+
+        
+        print("appended path is \(appendedPath)")
+        self.presentModalWithImageAndPath(image: UIImage(named: "face.jpg")!, imagePath: appendedPath.cgPath)
+
     }
 
 
@@ -458,7 +535,6 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
             let dateCreated = snapshot.metadata?.timeCreated?.timeIntervalSince1970
             
             
-            //TODO: UGH SAVE CGPATH TO [STRING: STRING]
             let bezierPath = UIBezierPath(cgPath: self.drawView.path!)
             let pathData = NSKeyedArchiver.archivedData(withRootObject: bezierPath)
             let pathDataAsBase64String = pathData.base64EncodedString()
