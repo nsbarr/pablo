@@ -18,6 +18,8 @@ class GameScene: SKScene, CAAnimationDelegate {
     private var spinnyNode : SKShapeNode?
     
     let cam = SKCameraNode()
+    let shapeLayer = CAShapeLayer()
+
     
     override func didMove(to view: SKView) {
         
@@ -39,11 +41,16 @@ class GameScene: SKScene, CAAnimationDelegate {
      //   })
 
         cam.position = currentPoint
-        print(currentPoint)
+        //print(currentPoint)
+        //let strokeValue:CGFloat = Float(shapeLayer.value(forKey: "strokeEnd") as! Float)
+        
+       // print(strokeValue)
+        
+        let cp = shapeLayer.presentation()?.bounds
+        print(cp)
     }
     
     func doTheThing(pathToAnimateScaled: CGPath){
-        let shapeLayer = CAShapeLayer()
         shapeLayer.strokeColor = UIColor.black.cgColor
         shapeLayer.fillColor = UIColor.clear.cgColor
         shapeLayer.lineWidth = 2.0
@@ -57,6 +64,25 @@ class GameScene: SKScene, CAAnimationDelegate {
         animation.toValue = 1.0
         animation.duration = 2.5
         shapeLayer.add(animation, forKey: "drawLineAnimation")
+        
+                shapeLayer.path!.apply(info: nil) { (_, elementPointer) in
+                    let element = elementPointer.pointee
+                    let command: String
+                    let pointCount: Int
+                    switch element.type {
+                    case .moveToPoint: command = "moveTo"; pointCount = 1
+                    case .addLineToPoint: command = "lineTo"; pointCount = 1
+                    case .addQuadCurveToPoint: command = "quadCurveTo"; pointCount = 2
+                    case .addCurveToPoint: command = "curveTo"; pointCount = 3
+                    case .closeSubpath: command = "close"; pointCount = 0
+                    }
+                    let points = Array(UnsafeBufferPointer(start: element.points, count: pointCount))
+                    if command == "moveTo"{
+                        Swift.print("\(command) \(points)")
+                    }
+                }
+                
+        
         
     }
 }
