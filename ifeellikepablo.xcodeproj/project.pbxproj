@@ -17,6 +17,7 @@
 		DD00E4C71E64F2AA002570B4 /* ScreenWidth.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00E4C61E64F2A9002570B4 /* ScreenWidth.swift */; };
 		DD00E50B1E651943002570B4 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00E50A1E651943002570B4 /* GameScene.swift */; };
 		DD00E50D1E651956002570B4 /* GameScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = DD00E50C1E651956002570B4 /* GameScene.sks */; };
+		DD0C88361E6A3DC1001671BF /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = DD0C88351E6A3DC1001671BF /* Actions.sks */; };
 		DD41064D1E537D1C00FF9862 /* Pablo.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD41064C1E537D1C00FF9862 /* Pablo.swift */; };
 		DD41064F1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD41064E1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift */; };
 		DD46F6221E48D64300B5E46B /* image.png in Resources */ = {isa = PBXBuildFile; fileRef = DD46F6211E48D64300B5E46B /* image.png */; };
@@ -38,6 +39,7 @@
 		DD00E4C61E64F2A9002570B4 /* ScreenWidth.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScreenWidth.swift; sourceTree = "<group>"; };
 		DD00E50A1E651943002570B4 /* GameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		DD00E50C1E651956002570B4 /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
+		DD0C88351E6A3DC1001671BF /* Actions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Actions.sks; sourceTree = "<group>"; };
 		DD41064C1E537D1C00FF9862 /* Pablo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Pablo.swift; sourceTree = "<group>"; };
 		DD41064E1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PabloFeedCollectionViewCell.swift; sourceTree = "<group>"; };
 		DD46F6211E48D64300B5E46B /* image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = image.png; sourceTree = "<group>"; };
@@ -84,6 +86,7 @@
 			children = (
 				01CD0CBC1E466E3300277364 /* AppDelegate.swift */,
 				DD00E50C1E651956002570B4 /* GameScene.sks */,
+				DD0C88351E6A3DC1001671BF /* Actions.sks */,
 				DD00E50A1E651943002570B4 /* GameScene.swift */,
 				01CD0CBE1E466E3300277364 /* ViewController.swift */,
 				DD00E4C61E64F2A9002570B4 /* ScreenWidth.swift */,
@@ -181,6 +184,7 @@
 				01CD0CC71E466E3300277364 /* LaunchScreen.storyboard in Resources */,
 				01B87A471E467339003CCCF8 /* GoogleService-Info.plist in Resources */,
 				01CD0CC41E466E3300277364 /* Assets.xcassets in Resources */,
+				DD0C88361E6A3DC1001671BF /* Actions.sks in Resources */,
 				01CD0CC21E466E3300277364 /* Main.storyboard in Resources */,
 				DD00E50D1E651956002570B4 /* GameScene.sks in Resources */,
 				DD46F6241E48D84600B5E46B /* face.jpg in Resources */,

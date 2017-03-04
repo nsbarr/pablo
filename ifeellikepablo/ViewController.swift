@@ -85,6 +85,9 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     var imagePathEndPoint:CGPoint!
     var oldImagePathEndPoint:CGPoint!
     
+    
+    var scene: GameScene!
+    
     //# MARK: - View Setup
 
     override func viewDidLoad() {
@@ -109,7 +112,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         infinityButton.center.x = view.center.x + 100
         infinityButton.backgroundColor = UIColor.red
         infinityButton.addTarget(self, action:#selector(self.infinityButtonPressed), for: .touchUpInside)
-        //TODO: self.view.addSubview(infinityButton)
+        self.view.addSubview(infinityButton)
         
         storage = FIRStorage.storage()
         database = FIRDatabase.database()
@@ -515,17 +518,19 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         view.addSubview(gameView)
         
 
-            if let scene = SKScene(fileNamed: "GameScene") {
+            if let gameScene = GameScene(fileNamed: "GameScene") {
                 // Set the scale mode to scale to fit the window
-                scene.scaleMode = .aspectFill
-                
+                gameScene.scaleMode = .aspectFill
+                self.scene = gameScene
+
                 // Present the scene
-                gameView.presentScene(scene)
+                gameView.presentScene(gameScene)
             }
  
        // print("appended path is \(appendedPath)")
        // self.presentModalWithImageAndPath(image: UIImage(named: "face.jpg")!, imagePath: appendedPath.cgPath)
-        
+        let pathToAnimate = appendedPath.cgPath
+        self.scene.doTheThing(pathToAnimateScaled: pathToAnimate)
 
     }
 

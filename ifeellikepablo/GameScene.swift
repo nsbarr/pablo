@@ -9,36 +9,22 @@
 import SpriteKit
 import GameplayKit
 
-class GameScene: SKScene {
+class GameScene: SKScene, CAAnimationDelegate {
     
     var viewController: ViewController!
+    var currentPoint = CGPoint.zero
     
     private var label : SKLabelNode?
     private var spinnyNode : SKShapeNode?
     
+    let cam = SKCameraNode()
+    
     override func didMove(to view: SKView) {
         
+        self.camera = cam
+        self.addChild(cam)
+        cam.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
         
-        
-        // Get label node from scene and store it for use later
-        self.label = self.childNode(withName: "//helloLabel") as? SKLabelNode
-        if let label = self.label {
-            label.alpha = 0.0
-            label.run(SKAction.fadeIn(withDuration: 2.0))
-        }
-        
-        // Create shape node to use during mouse interaction
-        let w = (self.size.width + self.size.height) * 0.05
-        self.spinnyNode = SKShapeNode.init(rectOf: CGSize.init(width: w, height: w), cornerRadius: w * 0.3)
-        
-        if let spinnyNode = self.spinnyNode {
-            spinnyNode.lineWidth = 2.5
-            
-            spinnyNode.run(SKAction.repeatForever(SKAction.rotate(byAngle: CGFloat(M_PI), duration: 1)))
-            spinnyNode.run(SKAction.sequence([SKAction.wait(forDuration: 0.5),
-                                              SKAction.fadeOut(withDuration: 0.5),
-                                              SKAction.removeFromParent()]))
-        }
     }
     
     
@@ -89,5 +75,33 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+        
+        
+        
+      //  let moveCamera = SKAction.move(to: currentPoint, duration: 0)
+     //   cam.run(moveCamera, completion:  {() -> Void in
+            //doneskis
+     //   })
+
+        cam.position = currentPoint
+        print(currentPoint)
+    }
+    
+    func doTheThing(pathToAnimateScaled: CGPath){
+        let shapeLayer = CAShapeLayer()
+        shapeLayer.strokeColor = UIColor.black.cgColor
+        shapeLayer.fillColor = UIColor.clear.cgColor
+        shapeLayer.lineWidth = 2.0
+        shapeLayer.lineCap = kCALineCapRound
+        self.view?.layer.addSublayer(shapeLayer)
+        shapeLayer.path = pathToAnimateScaled
+        
+        let animation = CABasicAnimation(keyPath: "strokeEnd")
+        animation.delegate = self
+        animation.fromValue = 0.0
+        animation.toValue = 1.0
+        animation.duration = 2.5
+        shapeLayer.add(animation, forKey: "drawLineAnimation")
+        
     }
 }
