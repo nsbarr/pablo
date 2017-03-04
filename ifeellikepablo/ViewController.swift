@@ -14,6 +14,36 @@ import UIKit
 import Firebase
 import FirebaseStorage
 import FirebaseDatabase
+import SpriteKit
+
+// rob mayoff's CGPath.foreach
+extension CGPath {
+    func forEach( body: @convention(block) (CGPathElement) -> Void) {
+        typealias Body = @convention(block) (CGPathElement) -> Void
+        func callback(info: UnsafeMutableRawPointer?, element: UnsafePointer<CGPathElement>) {
+            let body = unsafeBitCast(info, to: Body.self)
+            body(element.pointee)
+        }
+        let unsafeBody = unsafeBitCast(body, to: UnsafeMutableRawPointer.self)
+        
+        self.apply(info: unsafeBody, function: callback)
+    }
+}
+
+// Finds the first point in a path
+extension UIBezierPath {
+    func firstPoint() -> CGPoint? {
+        var firstPoint: CGPoint? = nil
+        
+        self.cgPath.forEach { element in
+            // Just want the first one, but we have to look at everything
+            guard firstPoint == nil else { return }
+            assert(element.type == .moveToPoint, "Expected the first point to be a move")
+            firstPoint = element.points.pointee
+        }
+        return firstPoint
+    }
+}
 
 class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, CAAnimationDelegate{
     
@@ -24,6 +54,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     var storage: FIRStorage!
     var drawView: SwiftyDrawView!
     var dummyButton: UIButton!
+    var infinityButton: UIButton!
     var collectionView: UICollectionView!
     var viewImage: UIImage!
     var refresher:UIRefreshControl!
@@ -48,7 +79,11 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     //bullshit
     var pabloImageWidth: CGFloat!
     var appendedPath = UIBezierPath()
-
+    var yTrans:CGFloat = 0.0
+    var xTrans:CGFloat = 0.0
+    var imagePathStartPoint:CGPoint!
+    var imagePathEndPoint:CGPoint!
+    var oldImagePathEndPoint:CGPoint!
     
     //# MARK: - View Setup
 
@@ -70,6 +105,12 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         dummyButton.addTarget(self, action:#selector(self.pressed), for: .touchUpInside)
         self.view.addSubview(dummyButton)
         
+        infinityButton = UIButton(frame: CGRect(x: 0, y: self.view.frame.height - 100, width: 55, height: 55))
+        infinityButton.center.x = view.center.x + 100
+        infinityButton.backgroundColor = UIColor.red
+        infinityButton.addTarget(self, action:#selector(self.infinityButtonPressed), for: .touchUpInside)
+        //TODO: self.view.addSubview(infinityButton)
+        
         storage = FIRStorage.storage()
         database = FIRDatabase.database()
         
@@ -80,6 +121,11 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
         //self.ohStopIt()
         
+    }
+    
+    func infinityButtonPressed(){
+        
+        self.doInfinityAnimation()
     }
     
     
@@ -145,8 +191,65 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         //let image = searches[indexPath.row]
         let cellImage = pablos[indexPath.row].image
         let imagePath = pablos[indexPath.row].path
-        appendedPath.append(UIBezierPath(cgPath: imagePath))
+        
+        //let's say it's (100,100). and we want it to be at (140,40), which is the endpoint. we transform it (+40,-60), ie., abs(startpoint.x-oldEndpoint.x), y)
+        
+        // now lets say it's still (100.100) and we want it to be at (10,40)...
+        imagePathStartPoint = UIBezierPath(cgPath: imagePath).firstPoint()
+        
+        
+        if oldImagePathEndPoint == nil{
+            print("no old image path")
+            oldImagePathEndPoint = imagePathStartPoint
+        }
+        else {
+            print("setting old imagepath")
+            oldImagePathEndPoint = imagePathEndPoint
+        }
+        
+
+        //this shouldn't be abs btw
+        xTrans = oldImagePathEndPoint.x - imagePathStartPoint.x
+        yTrans = oldImagePathEndPoint.y - imagePathStartPoint.y
+        print("oldEnd:\(oldImagePathEndPoint), imageStart:\(imagePathStartPoint), imageEnd:\(imagePathEndPoint)")
+        print("x: \(xTrans). y: \(yTrans)")
+
+        
+        
+      //  var transformedPath = imagePath
+     //   UIBezierPath(cgPath: transformedPath).apply(CGAffineTransform(translationX: xTrans, y: yTrans))
+        
+        var fuckTransform = CGAffineTransform(translationX: xTrans, y: yTrans)
+       // let fuckPath = imagePath.mutableCopy()
+        //fuckPath?.move(to: oldImagePathEndPoint)
+        let newShittyPath = imagePath.copy(using: &fuckTransform)
+        
+        imagePathEndPoint = newShittyPath!.currentPoint
+
+        //you need to save the transformed path here
+        appendedPath.append(UIBezierPath(cgPath: newShittyPath!))
+        
+        
+        
         self.presentModalWithImageAndPath(image: cellImage, imagePath: imagePath)
+
+        
+        
+//        imagePath.apply(info: nil) { (_, elementPointer) in
+//            let element = elementPointer.pointee
+//            let command: String
+//            let pointCount: Int
+//            switch element.type {
+//            case .moveToPoint: command = "moveTo"; pointCount = 1
+//            case .addLineToPoint: command = "lineTo"; pointCount = 1
+//            case .addQuadCurveToPoint: command = "quadCurveTo"; pointCount = 2
+//            case .addCurveToPoint: command = "curveTo"; pointCount = 3
+//            case .closeSubpath: command = "close"; pointCount = 0
+//            }
+//            let points = Array(UnsafeBufferPointer(start: element.points, count: pointCount))
+//            Swift.print("\(command) \(points)")
+//        }
+//        
         
         print("You selected cell #\(indexPath.item)!")
         if selectedIndexPath != nil && selectedIndexPath == indexPath as IndexPath
@@ -319,15 +422,16 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         //What we want is to scale the cgpath according to the box it was originally drawn in
         //path bigger: path = 15, box = 10. set path to 10. 10/15 * 15 = 10
         // box is bigger : path = 10, box = 15. set path to 15. 10 * 15/10 = 15
-        
+     //   print(pathToAnimate?.currentPoint)
         print(pabloImageWidth)
         //640 on 5 (2x width)
-        //1242 on 7 (3x width)
+        //1242 on 7+ (3x width)
         print(animateView.frame.width)
         // 414 on 7
         // 320 on 5
         
         //TODO: there must be a chiller way to infer scale from width of image
+        //let imageWidth = ScreenWidth.initWith(pixelWidth: pabloImageWidth)
         
         if pabloImageWidth == 640{ //made on iPhone 5
             if animateView.frame.width == 414{ // displaying on iPhone 7+
@@ -356,6 +460,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         print(scaleRatio)
         let bez = UIBezierPath(cgPath: pathToAnimateScaled)
         bez.apply(CGAffineTransform(scaleX: scaleRatio, y: scaleRatio))
+        //bez.apply(CGAffineTransform(translationX: CGFloat, y: CGFloat)
         pathToAnimateScaled = bez.cgPath
         
         shapeLayer.path = pathToAnimateScaled //pathToAnimate//drawView.path
@@ -382,49 +487,13 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         print("stopped \(anim)")
     }
     
-//    func ohStopIt(){
-//        
-//        
-//        if (drawView.path != nil){ // TODO: ASK BRYAN
-//            let bezierPath = UIBezierPath(cgPath: drawView.path!)
-//            let pathData = NSKeyedArchiver.archivedData(withRootObject: bezierPath)
-//            let pathDataAsString = String(data: pathData, encoding: .utf8)
-//            let pathDataAsBase64String = pathData.base64EncodedString()
-//            //print(pathDataAsBase64String)
-//            
-//            
-//            let decodedData = NSData(base64Encoded: pathDataAsBase64String, options: NSData.Base64DecodingOptions(rawValue: 0))
-//            
-//            let decodedBezierPath:UIBezierPath = NSKeyedUnarchiver.unarchiveObject(with: decodedData as! Data) as! UIBezierPath
-//            let decodedCgPath = decodedBezierPath.cgPath
-//            
-//            let dumbView = UIView(frame: collectionView.frame)
-//            collectionView.addSubview(dumbView)
-//            
-//            shapeLayer.strokeColor = UIColor.black.cgColor
-//            shapeLayer.fillColor = UIColor.clear.cgColor
-//            shapeLayer.lineWidth = 2.0
-//            shapeLayer.lineCap = kCALineCapRound
-//            
-//            dumbView.layer.addSublayer(shapeLayer)
-//            
-//            shapeLayer.path = decodedCgPath//drawView.path
-//            
-//            let animation = CABasicAnimation(keyPath: "strokeEnd")
-//            /* set up animation */
-//            animation.fromValue = 0.0
-//            animation.toValue = 1.0
-//            animation.duration = 2.5
-//            shapeLayer.add(animation, forKey: "drawLineAnimation")
-//        }
-//    }
     
     
     func pressed(sender: UIButton!){
         print("pressed")
         
 
-        self.collectionView.reloadData()
+        self.collectionView.setContentOffset(CGPoint.zero, animated: false)
         self.collectionView.isHidden = !self.collectionView.isHidden
         
         if self.collectionView.isHidden{
@@ -433,9 +502,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
 
         }
         
-        else {
-           // self.doInfinityAnimation()
-        }
+
 
         
     }
@@ -444,10 +511,21 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         //present a new full screen view
         //concat some paths
         // animate the path
-
+        let gameView = SKView(frame: self.view.frame)
+        view.addSubview(gameView)
         
-        print("appended path is \(appendedPath)")
-        self.presentModalWithImageAndPath(image: UIImage(named: "face.jpg")!, imagePath: appendedPath.cgPath)
+
+            if let scene = SKScene(fileNamed: "GameScene") {
+                // Set the scale mode to scale to fit the window
+                scene.scaleMode = .aspectFill
+                
+                // Present the scene
+                gameView.presentScene(scene)
+            }
+ 
+       // print("appended path is \(appendedPath)")
+       // self.presentModalWithImageAndPath(image: UIImage(named: "face.jpg")!, imagePath: appendedPath.cgPath)
+        
 
     }
 

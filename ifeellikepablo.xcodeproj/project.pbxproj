@@ -14,6 +14,9 @@
 		01CD0CC41E466E3300277364 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 01CD0CC31E466E3300277364 /* Assets.xcassets */; };
 		01CD0CC71E466E3300277364 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 01CD0CC51E466E3300277364 /* LaunchScreen.storyboard */; };
 		C39D26F247BDA6B979EF68CD /* Pods_ifeellikepablo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F5F8018157B0F80F7B3D882 /* Pods_ifeellikepablo.framework */; };
+		DD00E4C71E64F2AA002570B4 /* ScreenWidth.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00E4C61E64F2A9002570B4 /* ScreenWidth.swift */; };
+		DD00E50B1E651943002570B4 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00E50A1E651943002570B4 /* GameScene.swift */; };
+		DD00E50D1E651956002570B4 /* GameScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = DD00E50C1E651956002570B4 /* GameScene.sks */; };
 		DD41064D1E537D1C00FF9862 /* Pablo.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD41064C1E537D1C00FF9862 /* Pablo.swift */; };
 		DD41064F1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD41064E1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift */; };
 		DD46F6221E48D64300B5E46B /* image.png in Resources */ = {isa = PBXBuildFile; fileRef = DD46F6211E48D64300B5E46B /* image.png */; };
@@ -32,6 +35,9 @@
 		01CD0CC81E466E3300277364 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1A9A64C0FA9509913BD20C15 /* Pods-ifeellikepablo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ifeellikepablo.release.xcconfig"; path = "Pods/Target Support Files/Pods-ifeellikepablo/Pods-ifeellikepablo.release.xcconfig"; sourceTree = "<group>"; };
 		3F5F8018157B0F80F7B3D882 /* Pods_ifeellikepablo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ifeellikepablo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD00E4C61E64F2A9002570B4 /* ScreenWidth.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScreenWidth.swift; sourceTree = "<group>"; };
+		DD00E50A1E651943002570B4 /* GameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		DD00E50C1E651956002570B4 /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
 		DD41064C1E537D1C00FF9862 /* Pablo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Pablo.swift; sourceTree = "<group>"; };
 		DD41064E1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PabloFeedCollectionViewCell.swift; sourceTree = "<group>"; };
 		DD46F6211E48D64300B5E46B /* image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = image.png; sourceTree = "<group>"; };
@@ -77,7 +83,10 @@
 			isa = PBXGroup;
 			children = (
 				01CD0CBC1E466E3300277364 /* AppDelegate.swift */,
+				DD00E50C1E651956002570B4 /* GameScene.sks */,
+				DD00E50A1E651943002570B4 /* GameScene.swift */,
 				01CD0CBE1E466E3300277364 /* ViewController.swift */,
+				DD00E4C61E64F2A9002570B4 /* ScreenWidth.swift */,
 				DD41064E1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift */,
 				DD41064C1E537D1C00FF9862 /* Pablo.swift */,
 				01CD0CC01E466E3300277364 /* Main.storyboard */,
@@ -173,6 +182,7 @@
 				01B87A471E467339003CCCF8 /* GoogleService-Info.plist in Resources */,
 				01CD0CC41E466E3300277364 /* Assets.xcassets in Resources */,
 				01CD0CC21E466E3300277364 /* Main.storyboard in Resources */,
+				DD00E50D1E651956002570B4 /* GameScene.sks in Resources */,
 				DD46F6241E48D84600B5E46B /* face.jpg in Resources */,
 				DD46F6221E48D64300B5E46B /* image.png in Resources */,
 			);
@@ -233,10 +243,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD00E4C71E64F2AA002570B4 /* ScreenWidth.swift in Sources */,
 				DD41064D1E537D1C00FF9862 /* Pablo.swift in Sources */,
 				DD41064F1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift in Sources */,
 				DDDEFED81E467CEB001AC4F4 /* SwiftyDraw.swift in Sources */,
 				01CD0CBF1E466E3300277364 /* ViewController.swift in Sources */,
+				DD00E50B1E651943002570B4 /* GameScene.swift in Sources */,
 				01CD0CBD1E466E3300277364 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
