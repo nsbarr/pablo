@@ -426,30 +426,40 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         //path bigger: path = 15, box = 10. set path to 10. 10/15 * 15 = 10
         // box is bigger : path = 10, box = 15. set path to 15. 10 * 15/10 = 15
      //   print(pathToAnimate?.currentPoint)
-        print(pabloImageWidth)
+     //   print(pabloImageWidth)
         //640 on 5 (2x width)
         //1242 on 7+ (3x width)
-        print(animateView.frame.width)
+     //   print(animateView.frame.width)
         // 414 on 7
         // 320 on 5
         
-        //TODO: there must be a chiller way to infer scale from width of image
-        //let imageWidth = ScreenWidth.initWith(pixelWidth: pabloImageWidth)
+        //TODO: Bryan can help? This is sometimes nil (I think only on bad old stuff)
+        let imageWidth = ScreenWidth.initWith(pixelWidth: pabloImageWidth)
+        let animateLayerWidth = animateView.frame.width
         
-        if pabloImageWidth == 640{ //made on iPhone 5
-            if animateView.frame.width == 414{ // displaying on iPhone 7+
-                scaleRatio = animateView.frame.width / pabloImageWidth * 2
-            
-            }
+        if imageWidth == nil{
+            scaleRatio = 1
         }
-        
-        if pabloImageWidth == 1242{
-            if animateView.frame.width == 320{
-                scaleRatio = animateView.frame.width / pabloImageWidth * 3 //compare pixels vs whatever
-
-            }
+        else {
+            scaleRatio = animateLayerWidth/pabloImageWidth*imageWidth!.resolution
         }
+        //print("device: \(imageWidth), realPixels: \(imageWidth.pixelWidth), currentScreenWidth: \(animateLayerWidth)")
+    
         
+//        if pabloImageWidth == 640{ //made on iPhone 5
+//            if animateView.frame.width == 414{ // displaying on iPhone 7+
+//                scaleRatio = animateView.frame.width / pabloImageWidth * 2
+//            
+//            }
+//        }
+//        
+//        if pabloImageWidth == 1242{
+//            if animateView.frame.width == 320{
+//                scaleRatio = animateView.frame.width / pabloImageWidth * 3 //compare pixels vs whatever
+//
+//            }
+//        }
+//        
         
         
 //        if pabloImageWidth > animateView.frame.width{

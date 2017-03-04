@@ -46,8 +46,8 @@ class GameScene: SKScene, CAAnimationDelegate {
         
        // print(strokeValue)
         
-        let cp = shapeLayer.presentation()?.bounds
-        print(cp)
+    //    let cp = shapeLayer.presentation()?.bounds
+    //    print(cp)
     }
     
     func doTheThing(pathToAnimateScaled: CGPath){

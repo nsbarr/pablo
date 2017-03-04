@@ -12,6 +12,8 @@ public enum ScreenWidth: Int {
     case iPhone5 = 320
     case iPhone6 = 375
     case iPhone6Plus = 414
+    case iPadMini = 768
+    case iPadPro = 1024
     
     init?(logicalWidth: CGFloat) {
         self.init(rawValue: Int(logicalWidth))
@@ -20,7 +22,7 @@ public enum ScreenWidth: Int {
     static func initWith(pixelWidth: CGFloat) -> ScreenWidth? {
         // get all known screen widths
         // filter them to only include the one(s) that matches our pixelWidth
-        let allWidths: [ScreenWidth] = [.iPhone5, .iPhone6, .iPhone6Plus]
+        let allWidths: [ScreenWidth] = [.iPhone5, .iPhone6, .iPhone6Plus, .iPadMini, iPadPro]
         
         let result = allWidths.filter { width in
             return width.pixelWidth == pixelWidth
@@ -39,6 +41,10 @@ public enum ScreenWidth: Int {
             return 2
         case ScreenWidth.iPhone6Plus:
             return 3
+        case ScreenWidth.iPadMini:
+            return 2
+        case ScreenWidth.iPadPro:
+            return 2
         }
     }
     var pixelWidth: CGFloat {
