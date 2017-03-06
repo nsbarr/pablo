@@ -16,6 +16,8 @@ import FirebaseStorage
 import FirebaseDatabase
 import SpriteKit
 
+//# MARK: - Extensions
+
 // rob mayoff's CGPath.foreach
 extension CGPath {
     func forEach( body: @convention(block) (CGPathElement) -> Void) {
@@ -66,6 +68,8 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     
     let shapeLayer = CAShapeLayer()
     
+    var trackingLayer = CALayer()
+    
     var pathToAnimate: CGPath? = nil
 
     private let cellReuseIdentifier = "collectionCell"
@@ -84,6 +88,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     var imagePathStartPoint:CGPoint!
     var imagePathEndPoint:CGPoint!
     var oldImagePathEndPoint:CGPoint!
+    var bigSquare:UIView!
     
     
     var scene: GameScene!
@@ -121,8 +126,6 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         collectionView.isHidden = true
         
         self.listenForNewDrawings()
-        
-        //self.ohStopIt()
         
     }
     
@@ -307,6 +310,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     func listenForNewDrawings(){
         
         let dbRef = database.reference().child("myFiles")
+
         
         
         
@@ -314,9 +318,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         DispatchQueue.global(qos: .userInitiated).async {
             dbRef.observe(.childAdded, with: { (snapshot) -> Void in
                 
-                //TODO: BRYAN CAN HELP, CREATE AN OBJECT HERE WITH THE PROPERTIES WE WANT
                 let dict = snapshot.value as! NSDictionary
-                //print(dict)
                 let downloadURL = dict["url"] as! String
                 let timeCreated = dict["dateCreated"] as! Double
                 let timeCreatedAsDate = NSDate(timeIntervalSince1970: timeCreated)
@@ -340,7 +342,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
                     self.pablos.append(Pablo(uid: snapshot.key, image: pic, path: decodedCgPath, dateCreated: timeCreatedAsDate))
                     self.pablos.sort(by: { $0.dateCreated.compare($1.dateCreated as Date) == .orderedDescending })
                     self.collectionView.reloadData()
-                    print("new pablo")
+                  //  print("new pablo")
 
                 })
                 
@@ -520,28 +522,58 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
     }
     
+    
+    
     func doInfinityAnimation(){
-        //present a new full screen view
-        //concat some paths
-        // animate the path
-        let gameView = SKView(frame: self.view.frame)
-        view.addSubview(gameView)
         
+        //TODO: Do this earlier in the process...
+        
+        let pabloReference = self.database.reference().child("myFiles")
+        let infinityQuery = pabloReference.queryLimited(toLast: 3)
+        
+        appendedPath = UIBezierPath()
+        infinityQuery.observe(.childAdded, with: { (snapshot) -> Void in
+                let dict = snapshot.value as! NSDictionary
+                let pathString = dict["path"] as! String
+                let decodedData = NSData(base64Encoded: pathString, options: NSData.Base64DecodingOptions(rawValue: 0))
+                
+                let decodedBezierPath:UIBezierPath = NSKeyedUnarchiver.unarchiveObject(with: decodedData as! Data) as! UIBezierPath
+                let decodedCgPath = decodedBezierPath.cgPath
+                
+                self.imagePathStartPoint = UIBezierPath(cgPath: decodedCgPath).firstPoint()
+                
+                if self.oldImagePathEndPoint == nil{
+                    print("no old image path")
+                    self.oldImagePathEndPoint = self.imagePathStartPoint
+                }
+                else {
+                    print("setting old imagepath")
+                    self.oldImagePathEndPoint = self.imagePathEndPoint
+                }
+                
+                self.xTrans = self.oldImagePathEndPoint.x - self.imagePathStartPoint.x
+                self.yTrans = self.oldImagePathEndPoint.y - self.imagePathStartPoint.y
+               // print("oldEnd:\(oldImagePathEndPoint), imageStart:\(imagePathStartPoint), imageEnd:\(imagePathEndPoint)")
+              //  print("x: \(xTrans). y: \(yTrans)")
+                
+                var pathTransform = CGAffineTransform(translationX: self.xTrans, y: self.yTrans)
+                let transformedPath = decodedCgPath.copy(using: &pathTransform)
+                
+                self.imagePathEndPoint = transformedPath!.currentPoint
+                
+                //you need to save the transformed path here
+                self.appendedPath.append(UIBezierPath(cgPath: transformedPath!))
 
-            if let gameScene = GameScene(fileNamed: "GameScene") {
-                // Set the scale mode to scale to fit the window
-                gameScene.scaleMode = .aspectFill
-                self.scene = gameScene
 
-                // Present the scene
-                gameView.presentScene(gameScene)
-            }
- 
-       // print("appended path is \(appendedPath)")
-       // self.presentModalWithImageAndPath(image: UIImage(named: "face.jpg")!, imagePath: appendedPath.cgPath)
-        let pathToAnimate = appendedPath.cgPath
-        self.scene.doTheThing(pathToAnimateScaled: pathToAnimate)
-
+                
+                print("snapshot done")
+            })
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(20), execute: {
+            let pathToAnimate = self.appendedPath.cgPath
+            self.startInfinityAnimation(pathToAnimateScaled: pathToAnimate)
+        })
+        
     }
 
 
@@ -575,9 +607,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         viewImage = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
         let data = UIImagePNGRepresentation(viewImage) as Data?
-        
-        //searches.insert(viewImage, at: 0)
-        //TODO: Append the latest drawing to pablos, with just pic and path
+
         //TODO: THIS IS OK IN THE V SHORT TERM BUT NEED TO DE-DUPE ETC
 
         let storageRef = storage.reference(forURL: "gs://pablo-9fa92.appspot.com")
@@ -676,6 +706,115 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
         // Called if SwiftyDrawView detects issues with the gesture recognizers and cancels the drawing
         
+    }
+    
+    func gameLoop(){
+        print("loop")
+        if let fp = trackingLayer.presentation()?.position{
+            print(fp)
+            let cp = shapeLayer.presentation()?.value(forKey: "strokeEnd") as! Float
+            if cp != 1.0{
+                
+                
+                //bigSquare?.center = fp
+                //UIWindow *mainWindow = [[UIApplication sharedApplication] keyWindow];
+                //CGPoint pointInWindowCoords = [mainWindow convertPoint:pointInScreenCoords fromWindow:nil]
+                //CGPoint pointInViewCoords = [myView convertPoint:pointInWindowCoords fromView:mainWindow];
+
+                
+                let mainWindow = UIApplication.shared.keyWindow
+                let pointInWindow = mainWindow!.convert(fp, from: nil)
+                let pointInView = view.convert(pointInWindow, from: mainWindow)
+                
+                UIView.animate(withDuration: 1.25, animations: {
+                    self.bigSquare.center.y = self.view.center.y-pointInWindow.y + self.view.frame.width/2
+                    self.bigSquare.center.x = self.view.center.x-pointInWindow.x + self.view.frame.width/2
+                })
+                
+                //view?.center = (self.view?.layer.convert(fp, from: trackingLayer))!
+                
+                //                let intermediate = shapeLayer.convert(fp, from: trackingLayer)
+                //                view?.center = (self.view?.layer.convert(intermediate, from: shapeLayer))!
+                
+                print(self.view.center)
+            }
+            else{
+                print("animation done")
+                //   print(cp)
+            }
+        }
+    }
+    
+    func startInfinityAnimation(pathToAnimateScaled: CGPath){
+        
+        let bgSquare = UIView(frame: self.view.frame)
+        bgSquare.backgroundColor = UIColor.black
+        self.view.addSubview(bgSquare)
+        
+        bigSquare = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.width))
+        bigSquare.backgroundColor = UIColor.black
+        self.view.addSubview(bigSquare)
+        bigSquare.center = view.center
+        
+        var updater = CADisplayLink(target: self, selector: Selector("gameLoop"))
+        updater.preferredFramesPerSecond = 1
+        updater.add(to: RunLoop.current, forMode: RunLoopMode.commonModes)
+        
+        
+        shapeLayer.strokeColor = UIColor.white.cgColor
+        shapeLayer.fillColor = UIColor.clear.cgColor
+        shapeLayer.lineWidth = 2.0
+        shapeLayer.lineCap = kCALineCapRound
+        shapeLayer.frame = (self.view?.frame)!
+        bigSquare.layer.addSublayer(shapeLayer)
+        shapeLayer.path = pathToAnimateScaled
+        
+        trackingLayer.frame = CGRect(x: 0, y: 0, width: 5, height: 5)
+        trackingLayer.backgroundColor = UIColor.red.cgColor
+        shapeLayer.addSublayer(trackingLayer)
+        
+        
+        //CATransaction.begin()
+        
+        
+        let animation = CABasicAnimation(keyPath: "strokeEnd")
+        animation.delegate = self
+        animation.fromValue = 0.0
+        animation.toValue = 1.0
+        animation.duration = 40
+        shapeLayer.add(animation, forKey: "drawLineAnimation")
+    
+
+        let followPathAnimation = CAKeyframeAnimation(keyPath: "position")
+        followPathAnimation.path = shapeLayer.path
+        followPathAnimation.duration = animation.duration
+        trackingLayer.add(followPathAnimation, forKey: "positionAnimation")
+        
+        //CATransaction.commit()
+        
+        var arrayOfPoints = [CGPoint]()
+        
+        let foo = UIBezierPath(cgPath: shapeLayer.path!).elements
+        print (foo.count)
+        
+        shapeLayer.path!.apply(info: nil) { (_, elementPointer) in
+            let element = elementPointer.pointee
+            let command: String
+            let pointCount: Int
+            switch element.type {
+            case .moveToPoint: command = "moveTo"; pointCount = 1
+            case .addLineToPoint: command = "lineTo"; pointCount = 1
+            case .addQuadCurveToPoint: command = "quadCurveTo"; pointCount = 2
+            case .addCurveToPoint: command = "curveTo"; pointCount = 3
+            case .closeSubpath: command = "close"; pointCount = 0
+            }
+            let points = Array(UnsafeBufferPointer(start: element.points, count: pointCount))
+            if command == "moveTo"{
+                Swift.print("\(command) \(points)")
+                //add points to the arrayOfPoints but there's some C function pointer
+            }
+            //   print ("number of points in array:\(points.count)")
+        }
     }
 
 
