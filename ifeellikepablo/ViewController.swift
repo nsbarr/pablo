@@ -310,13 +310,16 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     func listenForNewDrawings(){
         
         let dbRef = database.reference().child("myFiles")
+        let orderedQuery = dbRef.queryOrdered(byChild: "dateCreated")
+        let limitedQuery = orderedQuery.queryLimited(toLast: 50)
+        
 
         
         
         
 
         DispatchQueue.global(qos: .userInitiated).async {
-            dbRef.observe(.childAdded, with: { (snapshot) -> Void in
+            limitedQuery.observe(.childAdded, with: { (snapshot) -> Void in
                 
                 let dict = snapshot.value as! NSDictionary
                 let downloadURL = dict["url"] as! String
@@ -342,7 +345,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
                     self.pablos.append(Pablo(uid: snapshot.key, image: pic, path: decodedCgPath, dateCreated: timeCreatedAsDate))
                     self.pablos.sort(by: { $0.dateCreated.compare($1.dateCreated as Date) == .orderedDescending })
                     self.collectionView.reloadData()
-                  //  print("new pablo")
+                    print("new pablo")
 
                 })
                 
@@ -529,7 +532,8 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         //TODO: Do this earlier in the process...
         
         let pabloReference = self.database.reference().child("myFiles")
-        let infinityQuery = pabloReference.queryLimited(toLast: 3)
+        let midQuery = pabloReference.queryOrdered(byChild: "dateCreated")
+        let infinityQuery = midQuery.queryLimited(toLast: 3)
         
         appendedPath = UIBezierPath()
         infinityQuery.observe(.childAdded, with: { (snapshot) -> Void in
