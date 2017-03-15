@@ -5,9 +5,9 @@
 //  Copyright © 2017 poemsio. All rights reserved.
 
 // THREE BIG TODOS
-// TODO: Figure out a better way to load in pablos
-// TODO: Properly handle pablo paths of different sizes (eg., 5 loading on 7; 7 loading on 5
-// TODO: Come up with the magic animation thing
+// TODO: Better loading indicator
+// TODO: Better UX for the magic animation thing
+
 
 
 import UIKit
@@ -89,9 +89,14 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     var imagePathEndPoint:CGPoint!
     var oldImagePathEndPoint:CGPoint!
     var bigSquare:UIView!
+    var bgSquare:UIView!
     
     
     var scene: GameScene!
+    
+    override var canBecomeFirstResponder: Bool {
+        return true
+    }
     
     //# MARK: - View Setup
 
@@ -117,7 +122,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         infinityButton.center.x = view.center.x + 100
         infinityButton.backgroundColor = UIColor.red
         infinityButton.addTarget(self, action:#selector(self.infinityButtonPressed), for: .touchUpInside)
-        self.view.addSubview(infinityButton)
+     //   self.view.addSubview(infinityButton)
         
         storage = FIRStorage.storage()
         database = FIRDatabase.database()
@@ -531,20 +536,53 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
         //TODO: Do this earlier in the process...
         
-        let pabloReference = self.database.reference().child("myFiles")
-        let midQuery = pabloReference.queryOrdered(byChild: "dateCreated")
-        let infinityQuery = midQuery.queryLimited(toLast: 3)
+//        let pabloReference = self.database.reference().child("myFiles")
+//        let midQuery = pabloReference.queryOrdered(byChild: "dateCreated")
+//        let infinityQuery = midQuery.queryLimited(toLast: 3)
+//        
+//        appendedPath = UIBezierPath()
+//        infinityQuery.observe(.childAdded, with: { (snapshot) -> Void in
+//                let dict = snapshot.value as! NSDictionary
+//                let pathString = dict["path"] as! String
+//                let decodedData = NSData(base64Encoded: pathString, options: NSData.Base64DecodingOptions(rawValue: 0))
+//                
+//                let decodedBezierPath:UIBezierPath = NSKeyedUnarchiver.unarchiveObject(with: decodedData as! Data) as! UIBezierPath
+//                let decodedCgPath = decodedBezierPath.cgPath
+//                
+//                self.imagePathStartPoint = UIBezierPath(cgPath: decodedCgPath).firstPoint()
+//                
+//                if self.oldImagePathEndPoint == nil{
+//                    print("no old image path")
+//                    self.oldImagePathEndPoint = self.imagePathStartPoint
+//                }
+//                else {
+//                    print("setting old imagepath")
+//                    self.oldImagePathEndPoint = self.imagePathEndPoint
+//                }
+//                
+//                self.xTrans = self.oldImagePathEndPoint.x - self.imagePathStartPoint.x
+//                self.yTrans = self.oldImagePathEndPoint.y - self.imagePathStartPoint.y
+//               // print("oldEnd:\(oldImagePathEndPoint), imageStart:\(imagePathStartPoint), imageEnd:\(imagePathEndPoint)")
+//              //  print("x: \(xTrans). y: \(yTrans)")
+//                
+//                var pathTransform = CGAffineTransform(translationX: self.xTrans, y: self.yTrans)
+//                let transformedPath = decodedCgPath.copy(using: &pathTransform)
+//                
+//                self.imagePathEndPoint = transformedPath!.currentPoint
+//                
+//                //you need to save the transformed path here
+//                self.appendedPath.append(UIBezierPath(cgPath: transformedPath!))
+//
+//
+//                
+//                print("snapshot done")
+//            })
         
-        appendedPath = UIBezierPath()
-        infinityQuery.observe(.childAdded, with: { (snapshot) -> Void in
-                let dict = snapshot.value as! NSDictionary
-                let pathString = dict["path"] as! String
-                let decodedData = NSData(base64Encoded: pathString, options: NSData.Base64DecodingOptions(rawValue: 0))
-                
-                let decodedBezierPath:UIBezierPath = NSKeyedUnarchiver.unarchiveObject(with: decodedData as! Data) as! UIBezierPath
-                let decodedCgPath = decodedBezierPath.cgPath
-                
-                self.imagePathStartPoint = UIBezierPath(cgPath: decodedCgPath).firstPoint()
+        // instead of doing a separate query just do the first few in pablos
+        
+        if self.pablos.isEmpty == false{
+            for pablo in self.pablos[1...10] {
+                self.imagePathStartPoint = UIBezierPath(cgPath: pablo.path).firstPoint()
                 
                 if self.oldImagePathEndPoint == nil{
                     print("no old image path")
@@ -557,26 +595,25 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
                 
                 self.xTrans = self.oldImagePathEndPoint.x - self.imagePathStartPoint.x
                 self.yTrans = self.oldImagePathEndPoint.y - self.imagePathStartPoint.y
-               // print("oldEnd:\(oldImagePathEndPoint), imageStart:\(imagePathStartPoint), imageEnd:\(imagePathEndPoint)")
-              //  print("x: \(xTrans). y: \(yTrans)")
+                // print("oldEnd:\(oldImagePathEndPoint), imageStart:\(imagePathStartPoint), imageEnd:\(imagePathEndPoint)")
+                //  print("x: \(xTrans). y: \(yTrans)")
                 
                 var pathTransform = CGAffineTransform(translationX: self.xTrans, y: self.yTrans)
-                let transformedPath = decodedCgPath.copy(using: &pathTransform)
+                let transformedPath = pablo.path.copy(using: &pathTransform)
                 
                 self.imagePathEndPoint = transformedPath!.currentPoint
                 
                 //you need to save the transformed path here
                 self.appendedPath.append(UIBezierPath(cgPath: transformedPath!))
-
-
                 
-                print("snapshot done")
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(0), execute: {
+                let pathToAnimate = self.appendedPath.cgPath
+                self.startInfinityAnimation(pathToAnimateScaled: pathToAnimate)
             })
+        }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(20), execute: {
-            let pathToAnimate = self.appendedPath.cgPath
-            self.startInfinityAnimation(pathToAnimateScaled: pathToAnimate)
-        })
         
     }
 
@@ -751,7 +788,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     
     func startInfinityAnimation(pathToAnimateScaled: CGPath){
         
-        let bgSquare = UIView(frame: self.view.frame)
+        bgSquare = UIView(frame: self.view.frame)
         bgSquare.backgroundColor = UIColor.black
         self.view.addSubview(bgSquare)
         
@@ -774,7 +811,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         shapeLayer.path = pathToAnimateScaled
         
         trackingLayer.frame = CGRect(x: 0, y: 0, width: 5, height: 5)
-        trackingLayer.backgroundColor = UIColor.red.cgColor
+        trackingLayer.backgroundColor = UIColor.clear.cgColor // UIColor.red.cgColor
         shapeLayer.addSublayer(trackingLayer)
         
         
@@ -820,6 +857,30 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
             //   print ("number of points in array:\(points.count)")
         }
     }
+    
+
+    
+    override func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
+        if motion == .motionShake {
+            let generator = UIImpactFeedbackGenerator(style: .heavy)
+            generator.impactOccurred()
+            if self.bigSquare == nil{
+                self.doInfinityAnimation()
+            }
+            else {
+                self.bgSquare.removeFromSuperview()
+                self.bigSquare.removeFromSuperview()
+                self.bigSquare = nil
+                
+            }
+            
+        }
+    }
+    
+    override func motionBegan(_ motion: UIEventSubtype, with event: UIEvent?) {
+        print("Device was shaken!")
+    }
+    
 
 
 }
