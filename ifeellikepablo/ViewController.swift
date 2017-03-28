@@ -7,6 +7,18 @@
 // THREE BIG TODOS
 // TODO: Better loading indicator
 // TODO: Better UX for the magic animation thing
+// TODO: Good animations for uploading, someone is typing, etc.
+    // A reasonable way to do this?
+    // As soon as the drawing completes, animate the drawView to the top left (ie., in a new cell)
+    // and gray it out or somehow indicate that it's still uploading.
+    // when it's complete (ie, not just uploaded but downloaded) replace it with the actual pablo.
+    // We could do this by adding something to the observe method that checks if the ID is the same
+    // as the "most recently uploaded pablo from this device." (we should maybe have an array of IDs,
+    // since a user might draw many Pablos while one is uploading, ugh... so maybe we just show a simple indicator that
+    // an upload is taking place?? so much worse. but maybe that's where we start?)
+    // When we actually ship the app we'll need to revisit whether we can just stream in Pablos. We
+    // probably can't. That's fine.
+
 
 
 
@@ -14,7 +26,6 @@ import UIKit
 import Firebase
 import FirebaseStorage
 import FirebaseDatabase
-import SpriteKit
 
 //# MARK: - Extensions
 
@@ -91,6 +102,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     var bigSquare:UIView!
     var bgSquare:UIView!
     
+    var updater = CADisplayLink()
     
     var scene: GameScene!
     
@@ -319,10 +331,6 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         let limitedQuery = orderedQuery.queryLimited(toLast: 50)
         
 
-        
-        
-        
-
         DispatchQueue.global(qos: .userInitiated).async {
             limitedQuery.observe(.childAdded, with: { (snapshot) -> Void in
                 
@@ -391,9 +399,9 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     }
     
     func dismissButtonPressed(){
-        modalVC.dismiss(animated: false) { 
-            
-        }
+
+            modalVC.dismiss(animated: false, completion: nil)
+
     }
     func tapDetectedSoAnimatePath() {
         print("tap!")
@@ -517,12 +525,38 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
 
         self.collectionView.setContentOffset(CGPoint.zero, animated: false)
+        
         self.collectionView.isHidden = !self.collectionView.isHidden
         
         if self.collectionView.isHidden{
             drawView.clearCanvas()
             drawView.drawingEnabled = true
+        }
+        else {
+            
+            let animation = CABasicAnimation(keyPath: "position")
+            
+            animation.fromValue = [drawView.frame.origin.x, drawView.frame.origin.y]
+            animation.toValue = [-100, -100]
+            animation.duration = 1.0
+            
+            drawView.layer.add(animation, forKey: "basic")
 
+//            fuck this
+//            let transitionTop: CATransition = CATransition()
+//            transitionTop.duration = 1.0
+//            transitionTop.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
+//            transitionTop.type = kCATransitionReveal
+//            transitionTop.subtype = kCATransitionFromBottom
+//            
+//            let transitionLeft: CATransition = CATransition()
+//            transitionLeft.duration = 1.0
+//            transitionLeft.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
+//            transitionLeft.type = kCATransitionReveal
+//            transitionLeft.subtype = kCATransitionFromRight
+//            
+//            drawView.window!.layer.add(transitionTop, forKey: nil)
+//            drawView.window!.layer.add(transitionLeft, forKey: nil)
         }
         
 
@@ -703,10 +737,10 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
             let pathData = NSKeyedArchiver.archivedData(withRootObject: bezierPath)
             let pathDataAsBase64String = pathData.base64EncodedString()
 
-            //let path = snapshot.metadata?.customMetadata = ["path" : pathDataAsBase64String]
-
-            
             // Write the download URL to the Realtime Database
+            
+            //TODO: should this UUID match the other one? How else can we match up pablos?
+            
             let uuid = NSUUID().uuidString
             //self.ref.child("users").child(user.uid).setValue(["username": username])
             let dbRef = self.database.reference().child("myFiles/\(uuid)")
@@ -767,7 +801,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
                 let pointInWindow = mainWindow!.convert(fp, from: nil)
                 let pointInView = view.convert(pointInWindow, from: mainWindow)
                 
-                UIView.animate(withDuration: 1.25, animations: {
+                UIView.animate(withDuration: 1.0, animations: {
                     self.bigSquare.center.y = self.view.center.y-pointInWindow.y + self.view.frame.width/2
                     self.bigSquare.center.x = self.view.center.x-pointInWindow.x + self.view.frame.width/2
                 })
@@ -797,8 +831,8 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         self.view.addSubview(bigSquare)
         bigSquare.center = view.center
         
-        var updater = CADisplayLink(target: self, selector: Selector("gameLoop"))
-        updater.preferredFramesPerSecond = 1
+        updater = CADisplayLink(target: self, selector: #selector(ViewController.gameLoop))
+        updater.preferredFramesPerSecond = 60
         updater.add(to: RunLoop.current, forMode: RunLoopMode.commonModes)
         
         
@@ -806,12 +840,12 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         shapeLayer.fillColor = UIColor.clear.cgColor
         shapeLayer.lineWidth = 2.0
         shapeLayer.lineCap = kCALineCapRound
-        shapeLayer.frame = (self.view?.frame)!
+        shapeLayer.frame = self.view!.frame
         bigSquare.layer.addSublayer(shapeLayer)
         shapeLayer.path = pathToAnimateScaled
         
         trackingLayer.frame = CGRect(x: 0, y: 0, width: 5, height: 5)
-        trackingLayer.backgroundColor = UIColor.clear.cgColor // UIColor.red.cgColor
+        trackingLayer.backgroundColor = UIColor.red.cgColor // UIColor.clear.cgColor // UIColor.red.cgColor
         shapeLayer.addSublayer(trackingLayer)
         
         
@@ -823,12 +857,26 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         animation.fromValue = 0.0
         animation.toValue = 1.0
         animation.duration = 40
+      //  animation.beginTime = CACurrentMediaTime()
         shapeLayer.add(animation, forKey: "drawLineAnimation")
-    
+        
+     //   pathAnimation.calculationMode = kCAAnimationPaced;
+    // resizeAnimation.fromValue = [NSNumber numberWithDouble:1.0];
+        
+        
+//        CAAnimationGroup *group = [CAAnimationGroup animation];
+//        group.fillMode = kCAFillModeForwards;
+//        group.removedOnCompletion = YES;
+//        [group setAnimations:[NSArray arrayWithObjects: pathAnimation, resizeAnimation, nil]];
+//        group.duration = 3.7f;
+//        group.delegate = self;
+//        [group setValue:self.myView forKey:@"imageViewBeingAnimated"];
 
         let followPathAnimation = CAKeyframeAnimation(keyPath: "position")
         followPathAnimation.path = shapeLayer.path
         followPathAnimation.duration = animation.duration
+        followPathAnimation.calculationMode = kCAAnimationPaced
+     //   followPathAnimation.beginTime = animation.beginTime
         trackingLayer.add(followPathAnimation, forKey: "positionAnimation")
         
         //CATransaction.commit()
@@ -871,6 +919,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
                 self.bgSquare.removeFromSuperview()
                 self.bigSquare.removeFromSuperview()
                 self.bigSquare = nil
+                updater.remove(from: RunLoop.current, forMode: RunLoopMode.commonModes)
                 
             }
             
