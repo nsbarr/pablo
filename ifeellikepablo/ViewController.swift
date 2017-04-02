@@ -5,8 +5,7 @@
 //  Copyright © 2017 poemsio. All rights reserved.
 
 // THREE BIG TODOS
-// TODO: Better loading indicator
-// TODO: Better UX for the magic animation thing
+
 // TODO: Good animations for uploading, someone is typing, etc.
     // A reasonable way to do this?
     // As soon as the drawing completes, animate the drawView to the top left (ie., in a new cell)
@@ -19,6 +18,9 @@
     // When we actually ship the app we'll need to revisit whether we can just stream in Pablos. We
     // probably can't. That's fine.
 
+// TODO: Smarter behavior for infinity animation. The Game Loop should be responsible for tacking on another pablo if we're at the end of our array; otherwise, we're tacking one on in our listener. Cool, but this is harder than it sounds... how do we keep the "rollup cgpath" updated?
+
+// TODO: Enable peek / pop
 
 
 
@@ -58,7 +60,7 @@ extension UIBezierPath {
     }
 }
 
-class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, CAAnimationDelegate{
+class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, CAAnimationDelegate{//, UIViewControllerPreviewingDelegate{
     
     
     //# MARK: - Variables
@@ -122,12 +124,15 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         drawView.delegate = self
         drawView.lineWidth = CGFloat(2.0)
         drawView.backgroundColor = UIColor.white
-        self.view.backgroundColor = UIColor.gray
+        self.view.backgroundColor = UIColor.black
         
         dummyButton = UIButton(frame: CGRect(x: 0, y: self.view.frame.height - 100, width: 55, height: 55))
         dummyButton.center.x = view.center.x
         dummyButton.backgroundColor = UIColor.blue
         dummyButton.addTarget(self, action:#selector(self.pressed), for: .touchUpInside)
+        //dummyButton says "Submit"
+        dummyButton.setImage(UIImage(named: "draw"), for: UIControlState.selected)
+        dummyButton.setImage(UIImage(named: "grid"), for: UIControlState.normal)
         self.view.addSubview(dummyButton)
         
         infinityButton = UIButton(frame: CGRect(x: 0, y: self.view.frame.height - 100, width: 55, height: 55))
@@ -139,10 +144,18 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         storage = FIRStorage.storage()
         database = FIRDatabase.database()
         
+        //peek
+//        if traitCollection.forceTouchCapability == .available {
+//            registerForPreviewing(with: self, sourceView: view)
+//        }
+        
+        
         self.setUpCollectionView()
         collectionView.isHidden = true
         
         self.listenForNewDrawings()
+        
+        
         
     }
     
@@ -175,11 +188,21 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         collectionView.dataSource = self
         collectionView.backgroundColor = UIColor.white
         
+        
+        let bgView = UIView(frame: collectionView.frame)
+        let loadingIndicator = UILabel(frame: CGRect(x: 0, y: 40, width: 100, height: 20))
+        loadingIndicator.text = "Loading..."
+        loadingIndicator.textAlignment = .center
+      //  loadingIndicator.center = collectionView.center
+        loadingIndicator.textColor = UIColor.black
+        collectionView.backgroundView = bgView
+        collectionView.backgroundView?.addSubview(loadingIndicator)
+        
         self.view.insertSubview(collectionView, belowSubview: dummyButton)
         
         refresher = UIRefreshControl()
         self.collectionView?.alwaysBounceVertical = true
-        refresher.tintColor = UIColor.blue
+        refresher.tintColor = UIColor.black
         refresher.addTarget(self, action: #selector(self.loadData), for: .valueChanged)
         collectionView!.addSubview(refresher)
         
@@ -391,6 +414,8 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         }
         
         dismissButton = UIButton(frame: CGRect(x: 0, y: self.view.frame.height - 100, width: 55, height: 55))
+        dismissButton.setImage(UIImage(named: "grid"), for: UIControlState.normal)
+
         dismissButton.center.x = view.center.x
         dismissButton.backgroundColor = UIColor.blue
         dismissButton.addTarget(self, action:#selector(self.dismissButtonPressed), for: .touchUpInside)
@@ -527,6 +552,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         self.collectionView.setContentOffset(CGPoint.zero, animated: false)
         
         self.collectionView.isHidden = !self.collectionView.isHidden
+        self.dummyButton.isSelected = !self.dummyButton.isSelected
         
         if self.collectionView.isHidden{
             drawView.clearCanvas()
@@ -845,7 +871,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         shapeLayer.path = pathToAnimateScaled
         
         trackingLayer.frame = CGRect(x: 0, y: 0, width: 5, height: 5)
-        trackingLayer.backgroundColor = UIColor.red.cgColor // UIColor.clear.cgColor // UIColor.red.cgColor
+        trackingLayer.backgroundColor = UIColor.clear.cgColor // UIColor.red.cgColor
         shapeLayer.addSublayer(trackingLayer)
         
         
@@ -906,6 +932,30 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         }
     }
     
+    // MARK: 3d touch delegation methods
+    
+//    func previewingContext(_ previewingContext: UIViewControllerPreviewing, viewControllerForLocation location: CGPoint) -> UIViewController? {
+//        
+//        guard let indexPath = collectionView?.indexPathForItem(at: location) else { return nil }
+//        
+//        guard let cell = collectionView?.cellForItem(at: indexPath) else { return nil }
+//        
+//        guard let detailVC = modalVC else { return nil }
+//        
+//     //   let photo = photos[indexPath.row]
+//     //   detailVC.photo = photo
+//        
+//        detailVC.preferredContentSize = CGSize(width: 0.0, height: 300)
+//        
+//        previewingContext.sourceRect = cell.frame
+//        
+//        return detailVC
+//    }
+//    
+//    func previewingContext(_ previewingContext: UIViewControllerPreviewing, commit viewControllerToCommit: UIViewController) {
+//        show(viewControllerToCommit, sender: self)
+//    }
+//    
 
     
     override func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
