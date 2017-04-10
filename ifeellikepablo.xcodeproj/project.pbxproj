@@ -44,6 +44,7 @@
 		DD41064E1E537D9100FF9862 /* PabloFeedCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PabloFeedCollectionViewCell.swift; sourceTree = "<group>"; };
 		DD46F6211E48D64300B5E46B /* image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = image.png; sourceTree = "<group>"; };
 		DD46F6231E48D84600B5E46B /* face.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = face.jpg; sourceTree = "<group>"; };
+		DDAB02E01E9BD7C000B00F51 /* ifeellikepablo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ifeellikepablo.entitlements; sourceTree = "<group>"; };
 		DDDEFED71E467CEB001AC4F4 /* SwiftyDraw.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyDraw.swift; sourceTree = "<group>"; };
 		F7B40717BE029A9287D4D092 /* Pods-ifeellikepablo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ifeellikepablo.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ifeellikepablo/Pods-ifeellikepablo.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -84,6 +85,7 @@
 		01CD0CBB1E466E3300277364 /* ifeellikepablo */ = {
 			isa = PBXGroup;
 			children = (
+				DDAB02E01E9BD7C000B00F51 /* ifeellikepablo.entitlements */,
 				01CD0CBC1E466E3300277364 /* AppDelegate.swift */,
 				DD00E50C1E651956002570B4 /* GameScene.sks */,
 				DD0C88351E6A3DC1001671BF /* Actions.sks */,
@@ -155,6 +157,11 @@
 						CreatedOnToolsVersion = 8.2.1;
 						DevelopmentTeam = 3RA98GNA2A;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.Push = {
+								enabled = 0;
+							};
+						};
 					};
 				};
 			};

@@ -560,13 +560,13 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         }
         else {
             
-            let animation = CABasicAnimation(keyPath: "position")
-            
-            animation.fromValue = [drawView.frame.origin.x, drawView.frame.origin.y]
-            animation.toValue = [-100, -100]
-            animation.duration = 1.0
-            
-            drawView.layer.add(animation, forKey: "basic")
+//            let animation = CABasicAnimation(keyPath: "position")
+//            
+//            animation.fromValue = [drawView.frame.origin.x, drawView.frame.origin.y]
+//            animation.toValue = [-100, -100]
+//            animation.duration = 1.0
+//            
+//            drawView.layer.add(animation, forKey: "basic")
 
 //            fuck this
 //            let transitionTop: CATransition = CATransition()
