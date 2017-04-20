@@ -18,7 +18,7 @@
     // When we actually ship the app we'll need to revisit whether we can just stream in Pablos. We
     // probably can't. That's fine.
 
-// TODO: Smarter behavior for infinity animation. The Game Loop should be responsible for tacking on another pablo if we're at the end of our array; otherwise, we're tacking one on in our listener. Cool, but this is harder than it sounds... how do we keep the "rollup cgpath" updated?
+// TODO: Smarter behavior for infinity animation -- time it per length of CGPath
 
 // TODO: Enable peek / pop
 
@@ -135,12 +135,6 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         dummyButton.setImage(UIImage(named: "grid"), for: UIControlState.normal)
         self.view.addSubview(dummyButton)
         
-        infinityButton = UIButton(frame: CGRect(x: 0, y: self.view.frame.height - 100, width: 55, height: 55))
-        infinityButton.center.x = view.center.x + 100
-        infinityButton.backgroundColor = UIColor.red
-        infinityButton.addTarget(self, action:#selector(self.infinityButtonPressed), for: .touchUpInside)
-     //   self.view.addSubview(infinityButton)
-        
         storage = FIRStorage.storage()
         database = FIRDatabase.database()
         
@@ -157,11 +151,6 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
         
         
-    }
-    
-    func infinityButtonPressed(){
-        
-        self.doInfinityAnimation()
     }
     
     
@@ -419,26 +408,6 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         var pathToAnimateScaled = pathToAnimate!
         var scaleRatio:CGFloat = 1.0
         
-        //TODO: this isn't working because it's only looking at the little rectangle that bounds the path.
-        //When that rectangle is very small (because the drawing is very small), it will blow up the drawing.
-        // Does CGPath have a position or something that we could use? How can we scale it according to its parent view, 
-        // while keeping its relationship with the parent view intact?
-        // eg., could we take the start point coordinate? is it true that as long as that coordinate is correct the drawing
-        // will have the right scale? (no)
-        
-        //hey, try using image size
-        
-        //What we want is to scale the cgpath according to the box it was originally drawn in
-        //path bigger: path = 15, box = 10. set path to 10. 10/15 * 15 = 10
-        // box is bigger : path = 10, box = 15. set path to 15. 10 * 15/10 = 15
-     //   print(pathToAnimate?.currentPoint)
-     //   print(pabloImageWidth)
-        //640 on 5 (2x width)
-        //1242 on 7+ (3x width)
-     //   print(animateView.frame.width)
-        // 414 on 7
-        // 320 on 5
-        
         //TODO: Bryan can help? This is sometimes nil (I think only on bad old stuff)
         let imageWidth = ScreenWidth.initWith(pixelWidth: pabloImageWidth)
         let animateLayerWidth = animateView.frame.width
@@ -449,33 +418,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         else {
             scaleRatio = animateLayerWidth/pabloImageWidth*imageWidth!.resolution
         }
-        //print("device: \(imageWidth), realPixels: \(imageWidth.pixelWidth), currentScreenWidth: \(animateLayerWidth)")
-    
-        
-//        if pabloImageWidth == 640{ //made on iPhone 5
-//            if animateView.frame.width == 414{ // displaying on iPhone 7+
-//                scaleRatio = animateView.frame.width / pabloImageWidth * 2
-//            
-//            }
-//        }
-//        
-//        if pabloImageWidth == 1242{
-//            if animateView.frame.width == 320{
-//                scaleRatio = animateView.frame.width / pabloImageWidth * 3 //compare pixels vs whatever
-//
-//            }
-//        }
-//        
-        
-        
-//        if pabloImageWidth > animateView.frame.width{
-//            scaleRatio = animateView.frame.width / pabloImageWidth
-//
-//        }
-//        else {
-//            scaleRatio = pabloImageWidth / animateView.frame.width
-//
-//        }
+
         print(scaleRatio)
         let bez = UIBezierPath(cgPath: pathToAnimateScaled)
         bez.apply(CGAffineTransform(scaleX: scaleRatio, y: scaleRatio))
@@ -487,7 +430,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
         
         let animation = CABasicAnimation(keyPath: "strokeEnd")
-        animation.delegate = self
+       // animation.delegate = self
         
         /* set up animation */
         animation.fromValue = 0.0
@@ -526,38 +469,10 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     
     func doInfinityAnimation(){
         
-        
         if self.pablos.isEmpty == false{
-            for pablo in self.pablos[1...10] {
-                self.imagePathStartPoint = UIBezierPath(cgPath: pablo.path).firstPoint()
-                
-                if self.oldImagePathEndPoint == nil{
-                    print("no old image path")
-                    self.oldImagePathEndPoint = self.imagePathStartPoint
-                }
-                else {
-                    print("setting old imagepath")
-                    self.oldImagePathEndPoint = self.imagePathEndPoint
-                }
-                
-                self.xTrans = self.oldImagePathEndPoint.x - self.imagePathStartPoint.x
-                self.yTrans = self.oldImagePathEndPoint.y - self.imagePathStartPoint.y
-                // print("oldEnd:\(oldImagePathEndPoint), imageStart:\(imagePathStartPoint), imageEnd:\(imagePathEndPoint)")
-                //  print("x: \(xTrans). y: \(yTrans)")
-                
-                var pathTransform = CGAffineTransform(translationX: self.xTrans, y: self.yTrans)
-                let transformedPath = pablo.path.copy(using: &pathTransform)
-                
-                self.imagePathEndPoint = transformedPath!.currentPoint
-                
-                //you need to save the transformed path here
-                self.appendedPath.append(UIBezierPath(cgPath: transformedPath!))
-                
-            }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(0), execute: {
-                let pathToAnimate = self.appendedPath.cgPath
-                //self.startInfinityAnimation(pathToAnimateScaled: pathToAnimate)
+
                 self.beginInfinityMode()
             })
         }
@@ -698,18 +613,12 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     }
     
     func gameLoop(){
-        print("loop")
+       // print("loop")
         if let fp = trackingLayer.presentation()?.position{
-            print(fp)
+            //print(fp)
             let cp = shapeLayer.presentation()?.value(forKey: "strokeEnd") as! Float
             if cp != 1.0{
                 
-                
-                //bigSquare?.center = fp
-                //UIWindow *mainWindow = [[UIApplication sharedApplication] keyWindow];
-                //CGPoint pointInWindowCoords = [mainWindow convertPoint:pointInScreenCoords fromWindow:nil]
-                //CGPoint pointInViewCoords = [myView convertPoint:pointInWindowCoords fromView:mainWindow];
-
                 
                 let mainWindow = UIApplication.shared.keyWindow
                 let pointInWindow = mainWindow!.convert(fp, from: nil)
@@ -720,16 +629,11 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
                     self.bigSquare.center.x = self.view.center.x-pointInWindow.x + self.view.frame.width/2
                 })
             
-                
-                //view?.center = (self.view?.layer.convert(fp, from: trackingLayer))!
-                
-                //                let intermediate = shapeLayer.convert(fp, from: trackingLayer)
-                //                view?.center = (self.view?.layer.convert(intermediate, from: shapeLayer))!
-                
-                print(self.view.center)
+            
+            //    print(self.view.center)
             }
             else{
-                print("animation done")
+              //  print("animation done")
                 //   print(cp)
             }
         }
@@ -737,57 +641,43 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     
     func animationDidStart(_ anim: CAAnimation) {
         print("started \(anim)")
+        let modifiedNextPath = self.transformPathToFitWithEndpoint(imagePath:pablos[currentPabloIndex+1].path)
+        pablos[currentPabloIndex+1].path = modifiedNextPath
     }
     
     func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
         print("stopped \(anim)")
         currentPabloIndex = currentPabloIndex + 1
         self.startInfinityAnimation(pathToAnimateScaled: pablos[currentPabloIndex].path)
-        let modifiedNextPath = self.transformPathToFitWithEndpoint(imagePath:pablos[currentPabloIndex+1].path)
-        pablos[currentPabloIndex+1].path = modifiedNextPath
-        //modify cgpath to start at the last one's endpoint
-        //start new infinityanimation
+
     }
     
     func transformPathToFitWithEndpoint(imagePath:CGPath) -> CGPath {
-        //let's say it's (100,100). and we want it to be at (140,40), which is the endpoint. we transform it (+40,-60), ie., abs(startpoint.x-oldEndpoint.x), y)
-        
-        // now lets say it's still (100.100) and we want it to be at (10,40)...
+
         imagePathStartPoint = UIBezierPath(cgPath: imagePath).firstPoint()
         
         
         if oldImagePathEndPoint == nil{
             print("no old image path")
-            oldImagePathEndPoint = imagePathStartPoint
+            oldImagePathEndPoint = pablos[currentPabloIndex].path.currentPoint
         }
         else {
             print("setting old imagepath")
             oldImagePathEndPoint = imagePathEndPoint
         }
         
-        
-        //this shouldn't be abs btw
         xTrans = oldImagePathEndPoint.x - imagePathStartPoint.x
         yTrans = oldImagePathEndPoint.y - imagePathStartPoint.y
-        print("oldEnd:\(oldImagePathEndPoint), imageStart:\(imagePathStartPoint), imageEnd:\(imagePathEndPoint)")
-        print("x: \(xTrans). y: \(yTrans)")
+        //print("oldEnd:\(oldImagePathEndPoint), imageStart:\(imagePathStartPoint), imageEnd:\(imagePathEndPoint)")
+        //print("x: \(xTrans). y: \(yTrans)")
         
-        
-        
-        //  var transformedPath = imagePath
-        //   UIBezierPath(cgPath: transformedPath).apply(CGAffineTransform(translationX: xTrans, y: yTrans))
-        
-        var fuckTransform = CGAffineTransform(translationX: xTrans, y: yTrans)
-        // let fuckPath = imagePath.mutableCopy()
-        //fuckPath?.move(to: oldImagePathEndPoint)
-        let newShittyPath = imagePath.copy(using: &fuckTransform)
-        
-        imagePathEndPoint = newShittyPath!.currentPoint
-        
-        return newShittyPath!
-        //you need to save the transformed path here
-        //  appendedPath.append(UIBezierPath(cgPath: newShittyPath!))
+        var pathTransform = CGAffineTransform(translationX: xTrans, y: yTrans)
 
+        let transformedPath = imagePath.copy(using: &pathTransform)
+        
+        imagePathEndPoint = transformedPath!.currentPoint
+        
+        return transformedPath!
     }
     
     func beginInfinityMode(){
@@ -806,13 +696,9 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         updater.preferredFramesPerSecond = 60
         updater.add(to: RunLoop.current, forMode: RunLoopMode.commonModes)
         
-
-        
-        
         currentPabloIndex = 0
         self.startInfinityAnimation(pathToAnimateScaled: pablos[currentPabloIndex].path)
-        let modifiedNextPath = self.transformPathToFitWithEndpoint(imagePath:pablos[currentPabloIndex+1].path)
-        pablos[currentPabloIndex+1].path = modifiedNextPath
+
         
         
         // MONDAY
@@ -875,29 +761,9 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         //CATransaction.begin()
         shapeLayer = newShapeLayer
         
-        let animation = CABasicAnimation(keyPath: "strokeEnd")
-        animation.delegate = self
-        animation.fromValue = 0.0
-        animation.toValue = 1.0
-        animation.duration = 4
-
-        newShapeLayer.add(animation, forKey: "drawLineAnimation")
-        
-
-        let followPathAnimation = CAKeyframeAnimation(keyPath: "position")
-        //followPathAnimation.delegate = self
-        followPathAnimation.path = shapeLayer.path
-        followPathAnimation.duration = animation.duration
-        followPathAnimation.calculationMode = kCAAnimationPaced
-        trackingLayer.add(followPathAnimation, forKey: "positionAnimation")
-        
-        
-
-  
-
         
         let foo = UIBezierPath(cgPath: shapeLayer.path!).elements
-        print (foo.count)
+        print ("number of elements:\(foo.count)")
         
         shapeLayer.path!.apply(info: nil) { (_, elementPointer) in
             let element = elementPointer.pointee
@@ -912,11 +778,38 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
             }
             let points = Array(UnsafeBufferPointer(start: element.points, count: pointCount))
             if command == "moveTo"{
-                Swift.print("\(command) \(points)")
+              //  Swift.print("\(command) \(points)")
                 //add points to the arrayOfPoints but there's some C function pointer
             }
-            //   print ("number of points in array:\(points.count)")
+         //      print ("number of points in array:\(points.count)")
+         //   print("point count = \(pointCount)")
+         //   print("element count = \(foo.elements)")
         }
+        let animation = CABasicAnimation(keyPath: "strokeEnd")
+        animation.delegate = self
+        animation.fromValue = 0.0
+        animation.toValue = 1.0
+        animation.duration = CFTimeInterval(foo.count/50)
+        
+        //we want the duration to be a function of the length; eg., we want something like 1 s / segment
+        //so number of elements looks like 50 all the way to 1300
+        //just divide by... what? take a fraction of it? ie., if we wanted those to take 1 s/ 50, then we'd just divide by 50. start there I guess?
+        
+        
+        newShapeLayer.add(animation, forKey: "drawLineAnimation")
+        
+        
+        let followPathAnimation = CAKeyframeAnimation(keyPath: "position")
+        //followPathAnimation.delegate = self
+        followPathAnimation.path = shapeLayer.path
+        followPathAnimation.duration = animation.duration
+        followPathAnimation.calculationMode = kCAAnimationPaced
+        trackingLayer.add(followPathAnimation, forKey: "positionAnimation")
+        
+        
+        
+        
+
     }
     
 

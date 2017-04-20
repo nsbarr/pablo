@@ -87,6 +87,26 @@ extension UIBezierPath {
         return pathElements
     }
 }
+
+//extension UIBezierPath{
+//    var length: CGFloat{
+//        var pathLength:CGFloat = 0.0
+//        var current = CGPoint.zero
+//        var first   = CGPoint.zero
+//        
+//        self.cgPath.forEach{ element in
+//            pathLength += element.distance(to: current, startPoint: first)
+//            
+//            if element.type == .moveToPoint{
+//                first = element.point
+//            }
+//            if element.type != .closeSubpath{
+//                current = element.point
+//            }
+//        }
+//        return pathLength
+//    }
+//}
 class GameScene: SKScene, CAAnimationDelegate {
     
     var viewController: ViewController!
@@ -212,7 +232,7 @@ class GameScene: SKScene, CAAnimationDelegate {
                         Swift.print("\(command) \(points)")
                         //add points to the arrayOfPoints but there's some C function pointer
                     }
-                 //   print ("number of points in array:\(points.count)")
+                    print ("number of points in array:\(points.count)")
                 }
     }
 }
