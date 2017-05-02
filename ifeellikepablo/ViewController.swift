@@ -18,13 +18,19 @@
     // When we actually ship the app we'll need to revisit whether we can just stream in Pablos. We
     // probably can't. That's fine.
 
-// TODO: Smarter behavior for infinity animation -- time it per length of CGPath
+// TODO: Normalize length (eg., max 15s?)
 
-// TODO: Enable peek / pop
+// TODO: Work on sharing with ReplayKit
+    // 0: tap drawing to start playing it and start recording it. change icon from play to FF (or hide it?). if recording already exists throw it away
+    // 1: tap FF to throw away recording (??) or just have no icon while drawing is playing
+    // 2: drawing completes animation and recording stops. icon converts to share
+    // alternately 
+    // longpress to play + record (on startrecord, animate; on stop animate, stoprecord)
 
 
 
 import UIKit
+import ReplayKit
 import Firebase
 import FirebaseStorage
 import FirebaseDatabase
@@ -60,7 +66,7 @@ extension UIBezierPath {
     }
 }
 
-class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, CAAnimationDelegate{//, UIViewControllerPreviewingDelegate{
+class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, CAAnimationDelegate, RPPreviewViewControllerDelegate{//, UIViewControllerPreviewingDelegate{
     
     
     //# MARK: - Variables
@@ -107,6 +113,9 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     var updater = CADisplayLink()
     var currentPabloIndex = 0
     var scene: GameScene!
+    var infinityViewEnabled = false
+    var isRecording = false
+    var shareButton: UIButton!
     
     override var canBecomeFirstResponder: Bool {
         return true
@@ -358,9 +367,11 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         modalVC = UIViewController()
         modalVC.view = modalView
         tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.tapDetectedSoAnimatePath))
+        let longpressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(self.longpressDetected))
         pabloImageWidth = image.size.width
         pathToAnimate = imagePath
         modalView.addGestureRecognizer(tapRecognizer)
+        modalView.addGestureRecognizer(longpressRecognizer)
         self.present(modalVC, animated: false) {
             //stuff
         }
@@ -372,8 +383,102 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         dismissButton.backgroundColor = UIColor.blue
         dismissButton.addTarget(self, action:#selector(self.dismissButtonPressed), for: .touchUpInside)
         self.modalView.addSubview(dismissButton)
+        
+//        shareButton = UIButton(frame: CGRect(x: 20, y: dismissButton.frame.origin.y, width: 55, height: 55))
+//        shareButton.setImage(UIImage(named: "play"), for: UIControlState.normal)
+//        shareButton.addTarget(self, action: #selector(self.startRecording), for: UIControlEvents.touchUpInside)
+//        self.modalView.addSubview(shareButton)
 
     }
+    
+    func longpressDetected(gesture : UILongPressGestureRecognizer!){
+        print("longpress!")
+        if gesture.state != .ended {
+            if gesture.state == .began{
+                let generator = UIImpactFeedbackGenerator(style: .light)
+                generator.impactOccurred()
+            }
+            return
+        }
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.impactOccurred()
+        let recorder = RPScreenRecorder.shared()
+        
+        recorder.startRecording{ [unowned self] (error) in
+            
+            if let unwrappedError = error {
+                print(unwrappedError.localizedDescription)
+            } else {
+                self.isRecording = true
+                self.tapDetectedSoAnimatePath()
+            }
+        }
+
+    }
+    
+    func previewControllerDidFinish(_ previewController: RPPreviewViewController) {
+        print("ok")
+        dismiss(animated: true)
+    }
+
+
+    
+    func stopRecording() {
+        let recorder = RPScreenRecorder.shared()
+        self.isRecording = false
+        
+        recorder.stopRecording { [unowned self] (preview, error) in
+            
+            if preview != nil {
+                preview?.previewControllerDelegate = self
+                let alertController = UIAlertController(title: "Recording", message: "Save a recording of this pablo?", preferredStyle: .alert)
+                
+                let discardAction = UIAlertAction(title: "Discard", style: .default) { (action: UIAlertAction) in
+                    RPScreenRecorder.shared().discardRecording(handler: { () -> Void in
+                        // Executed once recording has successfully been discarded
+                    })
+                }
+                
+                let viewAction = UIAlertAction(title: "View", style: .default, handler: { (action: UIAlertAction) -> Void in
+                    self.modalVC.present(preview!, animated: true, completion: nil)
+                })
+                
+                alertController.addAction(discardAction)
+                alertController.addAction(viewAction)
+                
+                self.modalVC.present(alertController, animated: true, completion: nil)
+                
+//                self.shareButton.removeTarget(self, action: #selector(self.stopRecording), for: .touchUpInside)
+//                self.shareButton.addTarget(self, action: #selector(self.startRecording), for: .touchUpInside)
+//                self.shareButton.setImage(UIImage(named: "play"), for: UIControlState.normal)
+                //should.setTitle("Start Recording", forState: .Normal)
+                //sender.setTitleColor(UIColor.blueColor(), forState: .Normal)
+            } else {
+                // Handle error
+                print("some kind of error: \(error)")
+            }
+        }
+    }
+    
+    func startRecording() {
+        let recorder = RPScreenRecorder.shared()
+        
+        recorder.startRecording{ [unowned self] (error) in
+            
+            if let unwrappedError = error {
+                print(unwrappedError.localizedDescription)
+            } else {
+                print("started recording")
+                self.isRecording = true
+//                self.shareButton.removeTarget(self, action: #selector(self.startRecording), for: .touchUpInside)
+//                self.shareButton.addTarget(self, action: #selector(self.stopRecording), for: .touchUpInside)
+//                self.shareButton.setImage(UIImage(named: "share"), for: UIControlState.normal)
+            }
+        }
+    }
+    
+    
+    
     
     func dismissButtonPressed(){
 
@@ -396,6 +501,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         shapeLayer.lineWidth = 2.0
         shapeLayer.lineCap = kCALineCapRound
         
+        
         // trying to scale animations
         // shapeLayer.bounds = animateView.bounds
         // shapeLayer.position = CGPoint(x: animateView.bounds.midX, y: animateView.bounds.midY)
@@ -407,6 +513,9 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
         var pathToAnimateScaled = pathToAnimate!
         var scaleRatio:CGFloat = 1.0
+        
+        let foo = UIBezierPath(cgPath: pathToAnimateScaled).elements
+
         
         //TODO: Bryan can help? This is sometimes nil (I think only on bad old stuff)
         let imageWidth = ScreenWidth.initWith(pixelWidth: pabloImageWidth)
@@ -430,12 +539,16 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
         
         let animation = CABasicAnimation(keyPath: "strokeEnd")
-       // animation.delegate = self
+        animation.delegate = self
         
         /* set up animation */
         animation.fromValue = 0.0
         animation.toValue = 1.0
-        animation.duration = 2.5
+        var duration = foo.count/120
+        if duration > 15{
+            duration = 15
+        }
+        animation.duration = CFTimeInterval(duration)
         shapeLayer.add(animation, forKey: "drawLineAnimation")
 
     
@@ -499,7 +612,9 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
         
         print("finished drawing")
-        
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.impactOccurred()
+
         self.drawView.drawingEnabled = false
         
 
@@ -641,14 +756,32 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     
     func animationDidStart(_ anim: CAAnimation) {
         print("started \(anim)")
-        let modifiedNextPath = self.transformPathToFitWithEndpoint(imagePath:pablos[currentPabloIndex+1].path)
-        pablos[currentPabloIndex+1].path = modifiedNextPath
+        if infinityViewEnabled == true{
+            let modifiedNextPath = self.transformPathToFitWithEndpoint(imagePath:pablos[currentPabloIndex+1].path)
+            pablos[currentPabloIndex+1].path = modifiedNextPath
+        }
     }
     
     func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
         print("stopped \(anim)")
-        currentPabloIndex = currentPabloIndex + 1
-        self.startInfinityAnimation(pathToAnimateScaled: pablos[currentPabloIndex].path)
+        /*
+         better scalable solution
+         if([[animation valueForKey:@"animationID"] isEqual:@"animation1"]) {
+         //animation is animation1
+         */
+ 
+        if infinityViewEnabled == true{
+            currentPabloIndex = currentPabloIndex + 1
+            if currentPabloIndex == 10 { // silly way to run forever for now
+                currentPabloIndex = 0
+            }
+            self.startInfinityAnimation(pathToAnimateScaled: pablos[currentPabloIndex].path)
+        }
+        else{
+            print("was recording, now will stop")
+            self.stopRecording()
+        }
+
 
     }
     
@@ -681,7 +814,6 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     }
     
     func beginInfinityMode(){
-        
         
         bgSquare = UIView(frame: self.view.frame)
         bgSquare.backgroundColor = UIColor.black
@@ -789,7 +921,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         animation.delegate = self
         animation.fromValue = 0.0
         animation.toValue = 1.0
-        animation.duration = CFTimeInterval(foo.count/50)
+        animation.duration = CFTimeInterval(foo.count/80)
         
         //we want the duration to be a function of the length; eg., we want something like 1 s / segment
         //so number of elements looks like 50 all the way to 1300
@@ -848,13 +980,16 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
             let generator = UIImpactFeedbackGenerator(style: .heavy)
             generator.impactOccurred()
             if self.bigSquare == nil{
+                infinityViewEnabled = true
                 self.doInfinityAnimation()
             }
             else {
+                infinityViewEnabled = false
                 self.bgSquare.removeFromSuperview()
                 self.bigSquare.removeFromSuperview()
                 self.bigSquare = nil
                 updater.remove(from: RunLoop.current, forMode: RunLoopMode.commonModes)
+                //maybe something hacky like remove delegate :/
                 
             }
             
