@@ -34,6 +34,7 @@ import ReplayKit
 import Firebase
 import FirebaseStorage
 import FirebaseDatabase
+import Changeset
 
 //# MARK: - Extensions
 
@@ -236,8 +237,6 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         let cellImage = pablos[indexPath.row].image
         let imagePath = pablos[indexPath.row].path
     
-        
-        
         self.presentModalWithImageAndPath(image: cellImage, imagePath: imagePath)
 
         
@@ -338,10 +337,15 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
                     // Create a UIImage, add it to the array
                     let pic = UIImage(data: data!)
                     //self.searches.append(pic!)
-                    //TODO: How to sort by time created?
+                    //var newPablos = self.pablos
                     self.pablos.append(Pablo(uid: snapshot.key, image: pic, path: decodedCgPath, dateCreated: timeCreatedAsDate))
                     self.pablos.sort(by: { $0.dateCreated.compare($1.dateCreated as Date) == .orderedDescending })
-                    self.collectionView.reloadData()
+                    
+                    // get a changeset between old and new using Changeset
+                    //let changeset = Changeset<[Pablo]>(source: self.pablos, target: newPablos)
+                    //self.collectionView.updateWithEdits(changeset.edits, inSection: 0)
+                    self.collectionView?.reloadData()
+                    //TODO: how did this used to work?
                     print("new pablo")
 
                 })
@@ -410,6 +414,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
                 print(unwrappedError.localizedDescription)
             } else {
                 self.isRecording = true
+                //TODO: when the user doesn't allow, this is still showing as true??
                 self.tapDetectedSoAnimatePath()
             }
         }

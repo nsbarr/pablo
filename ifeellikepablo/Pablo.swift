@@ -29,3 +29,7 @@ class Pablo {
         fatalError("init(coder:) has not been implemented")
     }
 }
+
+//func ==(lhs: Pablo, rhs: Pablo) -> Bool {
+//    return lhs.uid == rhs.uid
+//}
