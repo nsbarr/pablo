@@ -944,7 +944,8 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         self.view.addSubview(bgSquare)
         
         bigSquare = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.width))
-        bigSquare.backgroundColor = UIColor.black
+        bigSquare.backgroundColor = UIColor.clear
+        bigSquare.isUserInteractionEnabled = false
         self.view.addSubview(bigSquare)
         bigSquare.center = view.center
         
@@ -1028,7 +1029,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         trackingLayer.backgroundColor = UIColor.clear.cgColor // UIColor.red.cgColor
         newShapeLayer.addSublayer(trackingLayer)
         
-        //self.view.bringSubview(toFront: cancelButton)
+        self.view.bringSubview(toFront: cancelButton)
         
         
         //CATransaction.begin()
