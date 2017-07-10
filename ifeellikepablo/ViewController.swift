@@ -18,16 +18,9 @@
     // When we actually ship the app we'll need to revisit whether we can just stream in Pablos. We
     // probably can't. That's fine.
 
-// TODO: Normalize length (eg., max 15s?)
+// TODO: Improve Draw Icon
 
-// TODO: Work on sharing with ReplayKit
-    // 0: tap drawing to start playing it and start recording it. change icon from play to FF (or hide it?). if recording already exists throw it away
-    // 1: tap FF to throw away recording (??) or just have no icon while drawing is playing
-    // 2: drawing completes animation and recording stops. icon converts to share
-    // alternately 
-    // longpress to play + record (on startrecord, animate; on stop animate, stoprecord)
-
-
+// TODO: Autoplay drawing when you select a pablo
 
 import UIKit
 import ReplayKit
@@ -67,7 +60,7 @@ extension UIBezierPath {
     }
 }
 
-class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, CAAnimationDelegate, RPPreviewViewControllerDelegate{//, UIViewControllerPreviewingDelegate{
+class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, CAAnimationDelegate, RPPreviewViewControllerDelegate, UIWebViewDelegate{//, UIViewControllerPreviewingDelegate{
     
     
     //# MARK: - Variables
@@ -77,6 +70,8 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     var drawView: SwiftyDrawView!
     var dummyButton: UIButton!
     var infinityButton: UIButton!
+    var igButton: UIButton!
+    var cancelButton: UIButton!
     var collectionView: UICollectionView!
     var viewImage: UIImage!
     var refresher:UIRefreshControl!
@@ -89,8 +84,10 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     var shapeLayer = CAShapeLayer()
     
     var trackingLayer = CALayer()
-    
     var pathToAnimate: CGPath? = nil
+    
+    var coveringWindow: UIWindow?
+
 
     private let cellReuseIdentifier = "collectionCell"
     
@@ -110,13 +107,17 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     var oldImagePathEndPoint:CGPoint!
     var bigSquare:UIView!
     var bgSquare:UIView!
+    var animateView:UIView!
+    var hidingView:UIView!
+    var hidingViewTwo:UIView!
+    var previousContentOffset:CGFloat = 0
     
     var updater = CADisplayLink()
     var currentPabloIndex = 0
     var scene: GameScene!
     var infinityViewEnabled = false
     var isRecording = false
-    var shareButton: UIButton!
+    var saveButton: UIButton!
     
     override var canBecomeFirstResponder: Bool {
         return true
@@ -138,12 +139,33 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         
         dummyButton = UIButton(frame: CGRect(x: 0, y: self.view.frame.height - 100, width: 55, height: 55))
         dummyButton.center.x = view.center.x
-        dummyButton.backgroundColor = UIColor.blue
+        dummyButton.backgroundColor = UIColor.clear
         dummyButton.addTarget(self, action:#selector(self.pressed), for: .touchUpInside)
         //dummyButton says "Submit"
-        dummyButton.setImage(UIImage(named: "draw"), for: UIControlState.selected)
+        dummyButton.setImage(UIImage(named: "draw_dark"), for: UIControlState.selected)
         dummyButton.setImage(UIImage(named: "grid"), for: UIControlState.normal)
         self.view.addSubview(dummyButton)
+        
+        
+        infinityButton = UIButton(frame: dummyButton.frame)
+        infinityButton.frame.size = CGSize(width: 40, height: 40)
+        infinityButton.frame.origin.x = self.view.frame.width - 80
+        infinityButton.center.y = dummyButton.center.y
+        infinityButton.setImage(UIImage(named: "infinity"), for: UIControlState.normal)
+        infinityButton.addTarget(self, action: #selector(self.infinityButtonPressed), for: .touchUpInside)
+        infinityButton.isHidden = true
+        self.view.addSubview(infinityButton)
+        
+        igButton = UIButton(frame: dummyButton.frame)
+        igButton.frame.size = CGSize(width: 40, height: 40)
+        igButton.frame.origin.x = 40
+        igButton.center.y = dummyButton.center.y
+        igButton.setImage(UIImage(named: "ig"), for: UIControlState.normal)
+        igButton.addTarget(self, action: #selector(self.igButtonPressed), for: .touchUpInside)
+        igButton.isHidden = true
+        self.view.addSubview(igButton)
+        
+        
         
         storage = FIRStorage.storage()
         database = FIRDatabase.database()
@@ -239,23 +261,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     
         self.presentModalWithImageAndPath(image: cellImage, imagePath: imagePath)
 
-        
-        
-//        imagePath.apply(info: nil) { (_, elementPointer) in
-//            let element = elementPointer.pointee
-//            let command: String
-//            let pointCount: Int
-//            switch element.type {
-//            case .moveToPoint: command = "moveTo"; pointCount = 1
-//            case .addLineToPoint: command = "lineTo"; pointCount = 1
-//            case .addQuadCurveToPoint: command = "quadCurveTo"; pointCount = 2
-//            case .addCurveToPoint: command = "curveTo"; pointCount = 3
-//            case .closeSubpath: command = "close"; pointCount = 0
-//            }
-//            let points = Array(UnsafeBufferPointer(start: element.points, count: pointCount))
-//            Swift.print("\(command) \(points)")
-//        }
-//        
+    
         
         print("You selected cell #\(indexPath.item)!")
         if selectedIndexPath != nil && selectedIndexPath == indexPath as IndexPath
@@ -357,12 +363,48 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
     }
 
     
+    
+    
     // MARK: - Miscellaneous
     
+    func igButtonPressed(){
+        
+        let webViewController = UIViewController()
+        let webView = UIWebView(frame:CGRect(x: 0, y: 20, width: self.view.frame.width, height: self.view.frame.height-20))
+        webViewController.view = webView
+        //webView.delegate = self
+        if let url = URL(string: "https://instagram.com/pablo_oneline"){
+            let request = URLRequest(url:url)
+            webView.loadRequest(request)
+        }
+        
+        let navController = UINavigationController(rootViewController: webViewController)
+        webViewController.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(self.dismissVc))
+        
+        self.present(navController, animated: true, completion: nil)
+
+        
+    }
+    
+    
+    func dismissVc(){
+        self.dismiss(animated: true, completion: nil)
+    }
     func presentModalWithImageAndPath(image: UIImage, imagePath: CGPath){
         
-       
+        
         modalView = UIView(frame: self.view.frame)
+
+        dismissButton = UIButton(frame: CGRect(x: 0, y: self.view.frame.height - 100, width: 55, height: 55))
+        dismissButton.setImage(UIImage(named: "grid"), for: UIControlState.normal)
+        
+        dismissButton.center.x = view.center.x
+        dismissButton.backgroundColor = UIColor.blue
+        dismissButton.addTarget(self, action:#selector(self.dismissButtonPressed), for: .touchUpInside)
+        self.modalView.addSubview(dismissButton)
+        
+        
+       
         modalView.backgroundColor = UIColor.black
         expandedImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.width))
         expandedImageView.center = self.view.center
@@ -371,42 +413,66 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         modalVC = UIViewController()
         modalVC.view = modalView
         tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.tapDetectedSoAnimatePath))
-        let longpressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(self.longpressDetected))
+
         pabloImageWidth = image.size.width
         pathToAnimate = imagePath
-        modalView.addGestureRecognizer(tapRecognizer)
-        modalView.addGestureRecognizer(longpressRecognizer)
+        expandedImageView.isUserInteractionEnabled = true
+        expandedImageView.addGestureRecognizer(tapRecognizer)
         self.present(modalVC, animated: false) {
             //stuff
         }
         
-        dismissButton = UIButton(frame: CGRect(x: 0, y: self.view.frame.height - 100, width: 55, height: 55))
-        dismissButton.setImage(UIImage(named: "grid"), for: UIControlState.normal)
 
-        dismissButton.center.x = view.center.x
-        dismissButton.backgroundColor = UIColor.blue
-        dismissButton.addTarget(self, action:#selector(self.dismissButtonPressed), for: .touchUpInside)
-        self.modalView.addSubview(dismissButton)
         
-//        shareButton = UIButton(frame: CGRect(x: 20, y: dismissButton.frame.origin.y, width: 55, height: 55))
-//        shareButton.setImage(UIImage(named: "play"), for: UIControlState.normal)
-//        shareButton.addTarget(self, action: #selector(self.startRecording), for: UIControlEvents.touchUpInside)
-//        self.modalView.addSubview(shareButton)
+        saveButton = UIButton(frame: CGRect(x: 0, y: expandedImageView.frame.origin.y + expandedImageView.frame.height + 10, width: 44*2.836, height: 44))
+        saveButton.setImage(UIImage(named: "save"), for: UIControlState.normal)
+        saveButton.setImage(UIImage(named: "saving"), for: UIControlState.selected)
+        saveButton.addTarget(self, action: #selector(self.saveButtonTapped), for: UIControlEvents.touchUpInside)
+        self.modalView.addSubview(saveButton)
 
     }
     
-    func longpressDetected(gesture : UILongPressGestureRecognizer!){
-        print("longpress!")
-        if gesture.state != .ended {
-            if gesture.state == .began{
-                let generator = UIImpactFeedbackGenerator(style: .light)
-                generator.impactOccurred()
-            }
-            return
-        }
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
+    func coverEverything() {
+//        coveringWindow = UIWindow(frame: UIScreen.main.bounds)
+//        
+//        if let coveringWindow = coveringWindow {
+//            coveringWindow.windowLevel = UIWindowLevelAlert + 1
+//            coveringWindow.isHidden = false
+//            coveringWindow.backgroundColor = UIColor.clear
+//            coveringWindow.isUserInteractionEnabled = false
+//            let maskedView = UIView(frame: coveringWindow.bounds)
+//            maskedView.backgroundColor = UIColor.blue
+//            let maskLayer = CAShapeLayer()
+//            let maskRect = CGRect(x: 0, y: (self.view.frame.height-self.view.frame.width)/2, width: self.view.frame.width, height: self.view.frame.width)
+//            let path = CGPath(rect: maskRect, transform: nil)
+//            maskLayer.path = path
+//            maskedView.layer.mask = maskLayer
+//            coveringWindow.addSubview(maskedView)
+//        }
+        
+//        hidingView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: (self.view.frame.height-self.view.frame.width)/2))
+//        hidingView.backgroundColor = UIColor.black
+//        self.modalView.addSubview(hidingView)
+//        
+//        hidingViewTwo = UIView(frame: CGRect(x: 0, y: (self.view.frame.height-self.view.frame.width)/2+self.view.frame.width, width: self.view.frame.width, height: (self.view.frame.height-self.view.frame.width)/2))
+//        hidingViewTwo.backgroundColor = UIColor.black
+//        self.modalView.addSubview(hidingViewTwo)
+//        
+        
+    }
+    
+    func saveButtonTapped(sender : UIButton){
+        print("save tapped!")
+        let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
         let recorder = RPScreenRecorder.shared()
+        
+        self.coverEverything()
+        
+//        coveringWindow.isUserInteractionEnabled = false
+//        coveringWindow.isHidden = false
+//        coveringWindow.windowLevel = UIWindowLevelAlert
+//        coveringWindow.makeKeyAndVisible()
         
         recorder.startRecording{ [unowned self] (error) in
             
@@ -414,17 +480,72 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
                 print(unwrappedError.localizedDescription)
             } else {
                 self.isRecording = true
+                self.saveButton.isSelected = true
+                self.saveButton.isUserInteractionEnabled = false
                 //TODO: when the user doesn't allow, this is still showing as true??
                 self.tapDetectedSoAnimatePath()
             }
         }
-
+    }
+    
+    func infinityButtonPressed(){
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+        if self.bigSquare == nil{
+            infinityViewEnabled = true
+            self.doInfinityAnimation()
+        }
+        
     }
     
     func previewControllerDidFinish(_ previewController: RPPreviewViewController) {
         print("ok")
         dismiss(animated: true)
     }
+//
+
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        
+        let currentOffset = scrollView.contentOffset.y
+        
+        if (currentOffset > self.previousContentOffset) && (currentOffset > 4){
+            //scrolldown
+            UIView.animate(withDuration: 0.4, animations: {
+                self.dummyButton.center.y = self.view.frame.height + 200
+                self.infinityButton.center.y = self.dummyButton.center.y
+                self.igButton.center.y = self.dummyButton.center.y
+            })
+        }
+        else if (currentOffset < self.previousContentOffset - 6){
+            //scrollup
+            UIView.animate(withDuration: 0.4, animations: {
+                self.dummyButton.center.y = (self.view.frame.height - 100 + (55/2))
+                self.infinityButton.center.y = self.dummyButton.center.y
+                self.igButton.center.y = self.dummyButton.center.y
+
+            })
+
+        }
+        self.previousContentOffset = currentOffset
+    }
+
+//    
+//    //    func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) {
+//    //        print("started decel")
+//    //        if collectionView == scrollView{
+//    //            dummyButton.isHidden = true
+//    //        }
+//    //
+//    //    }
+//    
+//    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+//        print("ended decel")
+//        if collectionView == scrollView{
+//            dummyButton.isHidden = false
+//        }
+//    }
+    
 
 
     
@@ -435,8 +556,10 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         recorder.stopRecording { [unowned self] (preview, error) in
             
             if preview != nil {
+                let generator = UIImpactFeedbackGenerator(style: .heavy)
+                generator.impactOccurred()
                 preview?.previewControllerDelegate = self
-                let alertController = UIAlertController(title: "Recording", message: "Save a recording of this pablo?", preferredStyle: .alert)
+                let alertController = UIAlertController(title: "Recording", message: "Save a recording of this Pablo?", preferredStyle: .alert)
                 
                 let discardAction = UIAlertAction(title: "Discard", style: .default) { (action: UIAlertAction) in
                     RPScreenRecorder.shared().discardRecording(handler: { () -> Void in
@@ -444,13 +567,17 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
                     })
                 }
                 
-                let viewAction = UIAlertAction(title: "View", style: .default, handler: { (action: UIAlertAction) -> Void in
+                let viewAction = UIAlertAction(title: "Preview", style: .default, handler: { (action: UIAlertAction) -> Void in
                     self.modalVC.present(preview!, animated: true, completion: nil)
                 })
                 
                 alertController.addAction(discardAction)
                 alertController.addAction(viewAction)
-                
+                self.saveButton.isSelected = false
+                self.saveButton.isUserInteractionEnabled = true
+//                self.hidingView.removeFromSuperview()
+//                self.hidingViewTwo.removeFromSuperview()
+
                 self.modalVC.present(alertController, animated: true, completion: nil)
                 
 //                self.shareButton.removeTarget(self, action: #selector(self.stopRecording), for: .touchUpInside)
@@ -465,23 +592,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         }
     }
     
-    func startRecording() {
-        let recorder = RPScreenRecorder.shared()
-        
-        recorder.startRecording{ [unowned self] (error) in
-            
-            if let unwrappedError = error {
-                print(unwrappedError.localizedDescription)
-            } else {
-                print("started recording")
-                self.isRecording = true
-//                self.shareButton.removeTarget(self, action: #selector(self.startRecording), for: .touchUpInside)
-//                self.shareButton.addTarget(self, action: #selector(self.stopRecording), for: .touchUpInside)
-//                self.shareButton.setImage(UIImage(named: "share"), for: UIControlState.normal)
-            }
-        }
-    }
-    
+
     
     
     
@@ -494,7 +605,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         print("tap!")
         
         
-        let animateView = UIView(frame: expandedImageView.frame)
+        animateView = UIView(frame: expandedImageView.frame)
         animateView.backgroundColor = UIColor.white
         animateView.alpha = 1.0
         animateView.center = expandedImageView.center
@@ -574,10 +685,12 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         if self.collectionView.isHidden{
             drawView.clearCanvas()
             drawView.drawingEnabled = true
+            infinityButton.isHidden = true
+            igButton.isHidden = true
         }
         else {
-            
-
+            infinityButton.isHidden = false
+            igButton.isHidden = false
         }
     
         
@@ -651,6 +764,7 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
             // let downloadURL = metadata.downloadURL
         }
         
+
         
         // Create the file metadata
         let metadata = FIRStorageMetadata()
@@ -785,6 +899,11 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         else{
             print("was recording, now will stop")
             self.stopRecording()
+           //TODO: UNFUCK
+            //animateView?.alpha = 0.0
+            shapeLayer.strokeEnd = 1
+
+            
         }
 
 
@@ -828,6 +947,12 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         bigSquare.backgroundColor = UIColor.black
         self.view.addSubview(bigSquare)
         bigSquare.center = view.center
+        
+        cancelButton = UIButton(frame: self.infinityButton.frame)
+        cancelButton.frame.size = CGSize(width: 40, height: 40)
+        cancelButton.setImage(UIImage(named: "cancel"), for: UIControlState.normal)
+        cancelButton.addTarget(self, action: #selector(self.cancelButtonPressed), for: .touchUpInside)
+        bgSquare.addSubview(cancelButton)
         
         updater = CADisplayLink(target: self, selector: #selector(ViewController.gameLoop))
         updater.preferredFramesPerSecond = 60
@@ -877,6 +1002,15 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
 
     
     
+    func cancelButtonPressed(){
+        infinityViewEnabled = false
+        self.bgSquare.removeFromSuperview()
+        self.bigSquare.removeFromSuperview()
+        self.bigSquare = nil
+        updater.remove(from: RunLoop.current, forMode: RunLoopMode.commonModes)
+        //maybe something hacky like remove delegate :/
+        
+    }
 
     
     func startInfinityAnimation(pathToAnimateScaled: CGPath){
@@ -893,6 +1027,8 @@ class ViewController: UIViewController, SwiftyDrawViewDelegate, UICollectionView
         trackingLayer.frame = CGRect(x: 0, y: 0, width: 5, height: 5)
         trackingLayer.backgroundColor = UIColor.clear.cgColor // UIColor.red.cgColor
         newShapeLayer.addSublayer(trackingLayer)
+        
+        //self.view.bringSubview(toFront: cancelButton)
         
         
         //CATransaction.begin()
